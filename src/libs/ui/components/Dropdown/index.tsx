@@ -1,38 +1,38 @@
 import { Button, ButtonGroup, ClickAwayListener, Grow, MenuItem, MenuList, Paper, Popper } from '@mui/material'
 import React, { Key } from 'react'
 
-type DropdownProps = {
+type LibComponentProps = {
   options: Array<Key>,
   selectedIndex: number,
   setSelectedIndex: (idx: number) => void
 }
 
-const Dropdown = (props: DropdownProps) => {
-  const [open, setOpen] = React.useState(false);
-  const anchorRef = React.useRef<HTMLDivElement>(null);
+const LibComponent = (props: LibComponentProps) => {
+  const [open, setOpen] = React.useState(false)
+  const anchorRef = React.useRef<HTMLDivElement>(null)
 
   const handleMenuItemClick = (
     event: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number,
   ) => {
-    props.setSelectedIndex(index);
-    setOpen(false);
-  };
+    props.setSelectedIndex(index)
+    setOpen(false)
+  }
 
   const handleToggle = () => {
-    setOpen((prevOpen) => !prevOpen);
-  };
+    setOpen((prevOpen) => !prevOpen)
+  }
 
   const handleClose = (event: Event) => {
     if (
       anchorRef.current &&
       anchorRef.current.contains(event.target as HTMLElement)
     ) {
-      return;
+      return
     }
 
-    setOpen(false);
-  };
+    setOpen(false)
+  }
 
   return (
     <React.Fragment>
@@ -76,7 +76,7 @@ const Dropdown = (props: DropdownProps) => {
         )}
       </Popper>
     </React.Fragment>
-  );
+  )
 }
 
-export default Dropdown
+export default LibComponent

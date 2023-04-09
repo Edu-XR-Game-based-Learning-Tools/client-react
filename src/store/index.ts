@@ -5,8 +5,11 @@ import { createReduxHistoryContext } from 'redux-first-history'
 import logger from 'redux-logger'
 
 import { Env } from 'config/Env'
+import authenticationReducer, { AuthenticationState } from 'features/authentication/store/slice'
+import globalReducer, { GlobalState } from 'features/global/store/slice'
 import postsReducer from 'features/posts/store/posts.slice'
-import { rootSaga } from 'store/rootSaga'
+
+import { rootSaga } from './rootSaga'
 
 const { createReduxHistory, routerMiddleware, routerReducer } = createReduxHistoryContext({
   history: createBrowserHistory(),
@@ -19,8 +22,10 @@ const makeStore = () => {
 
   const store = configureStore({
     reducer: {
-      posts: postsReducer,
       router: routerReducer,
+      global: globalReducer,
+      authentication: authenticationReducer,
+      posts: postsReducer,
     },
     devTools: Env.isDev(),
     middleware: getDefaultMiddleware =>
@@ -41,3 +46,8 @@ export type AppDispatch = typeof store.dispatch
 export type RootState = ReturnType<typeof store.getState>
 
 export const history = createReduxHistory(store)
+
+export interface ReducerType {
+  authentication: AuthenticationState
+  global: GlobalState
+}

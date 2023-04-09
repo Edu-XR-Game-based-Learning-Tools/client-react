@@ -2,7 +2,7 @@
 import { createAction, createSlice, nanoid, PayloadAction } from '@reduxjs/toolkit'
 
 import { Post } from 'features/posts/types'
-import type { RootState } from 'store/store'
+import type { RootState } from 'store'
 
 export interface PostsState {
   posts: Post[]
@@ -17,7 +17,7 @@ export const postsSlice = createSlice({
   name: 'posts',
   initialState,
   reducers: {
-    fetchAllSucceeded(state, action: PayloadAction<Post[]>) {
+    fetchAllSucceeded(state: PostsState, action: PayloadAction<Post[]>) {
       // it's okay to do this here, because immer makes it immutable under the hood😊
       state.posts = action.payload
     },

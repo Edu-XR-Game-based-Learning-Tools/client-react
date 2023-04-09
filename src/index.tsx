@@ -1,17 +1,18 @@
-import React from 'react'
 import ReactDOM from 'react-dom'
+import { Provider } from 'react-redux'
 
 import App from 'App'
 import 'config/i18n'
 import 'index.css'
 import reportWebVitals from 'reportWebVitals'
+import { history, store } from 'store'
 
 // initMockServiceWorker()
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  <Provider store={store}>
+    <App history={history} />
+  </Provider>,
   document.getElementById('root'),
 )
 

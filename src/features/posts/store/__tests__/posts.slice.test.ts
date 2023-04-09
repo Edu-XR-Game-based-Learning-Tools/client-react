@@ -1,6 +1,6 @@
-import reducer, { postsActions, selectPosts } from 'features/posts/store/posts.slice'
+import reducer, { postsActions, selectors } from 'features/posts/store/posts.slice'
 import { Post } from 'features/posts/types'
-import { RootState, store } from 'store/store'
+import { RootState, store } from 'store'
 
 const expectedPosts = [
   { id: '1', body: 'post1', title: 'post1' },
@@ -54,7 +54,7 @@ describe('Selectors tests', () => {
     }
 
     // When
-    const result = selectPosts(state)
+    const result = selectors(state)
 
     // Then
     expect(result).toEqual([])

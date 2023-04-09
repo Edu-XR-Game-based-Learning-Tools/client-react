@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { NavLink as RouterLink } from 'react-router-dom'
 
 import { languages } from 'config/i18n'
-import Dropdown from 'libs/ui/components/Dropdown/Dropdown'
+import LibComponent from 'libs/ui/components/Dropdown'
 import { themeNames } from 'libs/ui/theme'
 
 type HeaderProps = {
@@ -59,18 +59,18 @@ const Header = (props: HeaderProps) => {
                 </Link>
               </Grid>
               <Grid item xs={'auto'}>
-                <Dropdown
+                <LibComponent
                   options={languages}
                   selectedIndex={currentLangIdx}
                   setSelectedIndex={onChangeLanguage}
-                ></Dropdown>
+                ></LibComponent>
               </Grid>
               <Grid item xs={'auto'}>
-                <Dropdown
+                <LibComponent
                   options={themeNames}
                   selectedIndex={currentThemeIdx}
                   setSelectedIndex={onChangeThemeClick}
-                ></Dropdown>
+                ></LibComponent>
               </Grid>
             </Grid>
           </div>

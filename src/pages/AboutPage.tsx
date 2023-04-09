@@ -1,12 +1,11 @@
-import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import TitleTypography from 'libs/ui/components/TitleTypography'
 
-const AboutPage = () => {
+const Page = () => {
   const { t } = useTranslation()
 
   return <TitleTypography title={t('about.title')} />
 }
 
-export default AboutPage
+export default Page
