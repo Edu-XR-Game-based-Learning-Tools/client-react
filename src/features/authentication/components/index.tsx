@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import images from 'config/images'
 import { ReducerType } from 'store'
 
-import { LoginType, RegisterType } from '../types'
+import { AuthType } from '../types'
 
 import LandingPage from './LandingPage'
 import Login from './Login'
@@ -14,19 +14,17 @@ import Register from './Register'
 import useStyles from './styles'
 
 const mapStateToProps = (state: ReducerType) => ({
-  loginData: state.authentication.loginData,
+  authData: state.authentication.authData,
   isLoading: state.global.isLoading,
-  registerData: state.authentication.registerData,
 })
 
 interface AuthProps {
-  loginData: LoginType
+  authData: AuthType
   isLoading: boolean
-  registerData: RegisterType
 }
 
 const AuthenticationContainer = (props: AuthProps) => {
-  const { loginData, isLoading, registerData } = props
+  const { authData, isLoading } = props
   const [isLoginPage, setIsLoginPage] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('id')))
   const navigate = useNavigate()
@@ -37,16 +35,16 @@ const AuthenticationContainer = (props: AuthProps) => {
   }
 
   useEffect(() => {
-    if (loginData.id || registerData.id.length !== 0) {
+    if (authData.accessToken != null) {
       setIsLoggedIn(Boolean(setIsLoggedIn))
     } else {
       setIsLoggedIn(Boolean(localStorage.getItem('id')))
     }
-  }, [loginData, registerData])
+  }, [authData])
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate('/home')
+      navigate('/')
     }
   }, [navigate, isLoggedIn])
 
@@ -57,7 +55,7 @@ const AuthenticationContainer = (props: AuthProps) => {
           <img src={images.AppIcon} alt={images.AppIcon} />
           <Typography classes={{ root: classes.rootAppName }}>GBLT</Typography>
         </Grid>
-        <Grid xs={12}>
+        <Grid item xs={12}>
           <Typography classes={{ root: classes.slogan }}>
             Join the
             <span className={classes.rootFun}> fun.</span>

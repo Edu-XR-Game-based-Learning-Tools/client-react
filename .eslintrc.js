@@ -35,6 +35,7 @@ module.exports = {
     },
   },
   'rules': {
+	'no-console': 'off',
     'jest/expect-expect': [
       'error',
       {

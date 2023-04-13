@@ -1,17 +1,15 @@
 // DUCKS pattern
 import { createAction, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-import { initLogin, initRegister, LoginActionType, LoginType, RegisterActionType, RegisterType } from 'features/authentication/types'
+import { initAuth, LoginActionType, RegisterActionType, AuthType } from 'features/authentication/types'
 import type { RootState } from 'store'
 
 export interface AuthenticationState {
-  loginData: LoginType
-  registerData: RegisterType
+  authData: AuthType
 }
 
 const initialState: AuthenticationState = {
-  loginData: initLogin,
-  registerData: initRegister,
+  authData: initAuth,
 }
 
 // slice
@@ -19,11 +17,8 @@ export const authenticationSlice = createSlice({
   name: 'authentication',
   initialState,
   reducers: {
-    setIsLogin(state: AuthenticationState, action: PayloadAction<LoginType>) {
-      state.loginData = action.payload
-    },
-    setIsRegister(state: AuthenticationState, action: PayloadAction<RegisterType>) {
-      state.registerData = action.payload
+    setIsLogin(state: AuthenticationState, action: PayloadAction<AuthType>) {
+      state.authData = action.payload
     },
   },
 })
@@ -33,7 +28,6 @@ export const authenticationActions = {
   login: createAction<LoginActionType>(`${authenticationSlice.name}/login`),
   register: createAction<RegisterActionType>(`${authenticationSlice.name}/register`),
   setIsLogin: authenticationSlice.actions.setIsLogin,
-  setIsRegister: authenticationSlice.actions.setIsRegister,
 }
 
 // Selectors

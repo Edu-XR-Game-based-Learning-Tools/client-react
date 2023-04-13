@@ -2,16 +2,13 @@ import { useCallback } from 'react'
 
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 
-import { logout } from '../services'
 import { authenticationActions, authenticationSelectors } from '../store'
-import { LoginActionType, LoginType, RegisterActionType, RegisterType } from '../types'
+import { AuthType, LoginActionType, RegisterActionType } from '../types'
 
 export type Operators = {
-  loginData: LoginType
-  registerData: RegisterType
+  authData: AuthType
   login: (data: LoginActionType) => void
   register: (data: RegisterActionType) => void
-  logout: () => void
 }
 
 /**
@@ -23,8 +20,7 @@ const useService = (): Readonly<Operators> => {
   const selects = useAppSelector(authenticationSelectors)
 
   return {
-    loginData: selects.loginData,
-    registerData: selects.registerData,
+    authData: selects.authData,
 
     login: useCallback(
       (data: LoginActionType) => {
@@ -38,7 +34,6 @@ const useService = (): Readonly<Operators> => {
       },
       [dispatch],
     ),
-    logout
   }
 }
 

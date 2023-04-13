@@ -11,6 +11,7 @@ import { connect } from 'react-redux'
 
 import { PASSWORD_REGEX_ERROR, USERNAME_REGEX_ERROR } from 'config/defines'
 import images from 'config/images'
+import { RegisterActionType } from 'features/authentication'
 import { useAuthenticationService } from 'features/authentication/hooks'
 import { ReducerType } from 'store'
 
@@ -24,19 +25,12 @@ interface RegisterProps {
   setLogin: () => void
 }
 
-interface FormData {
-  username: string
-  password: string
-  repassword: string
-  email: string
-}
-
 const Register = (props: RegisterProps) => {
   const classes = useStyles()
   const { setLogin } = props
   const [isShowPass, setIsShowPass] = useState(false)
   const [isShowRePass, setIsShowRePass] = useState(false)
-  const { handleSubmit, register, formState: { errors }, getValues } = useForm<FormData>()
+  const { handleSubmit, register, formState: { errors }, getValues } = useForm<RegisterActionType>()
   const service = useAuthenticationService.default()
   const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault()
@@ -50,12 +44,13 @@ const Register = (props: RegisterProps) => {
     setIsShowRePass(!isShowRePass)
   }
 
-  const onSubmit = (values: FormData) => {
-    const { username, password, email } = values
+  const onSubmit = (values: RegisterActionType) => {
+    const { username, password, email, repassword } = values
     service.register({
       username,
       password,
       email,
+      repassword,
     })
   }
 

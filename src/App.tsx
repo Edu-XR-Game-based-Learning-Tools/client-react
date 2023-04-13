@@ -4,26 +4,25 @@ import { connect } from 'react-redux'
 import { HistoryRouter as Router } from 'redux-first-history/rr6'
 
 import 'App.css'
-import { initUserPreference, LoginType, RegisterType, UserPreference } from 'features/authentication'
+import { initUserPreference, AuthType, UserPreference } from 'features/authentication'
+import { checkToken } from 'libs/core/configureAxios'
 import AppRoutes from 'routes'
 import { ReducerType } from 'store'
 
 type AppProps = {
   history: History
-  loginData: LoginType
-  registerData: RegisterType
+  authData: AuthType
   userPref: UserPreference
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapStateToProps = (state: ReducerType) => ({
-  loginData: state.authentication?.loginData,
-  registerData: state.authentication?.registerData,
+  authData: state.authentication?.authData,
   userPref: initUserPreference
 })
 
 const App = (props: AppProps) => {
-  const { history, loginData, registerData, } = props
+  const { history, authData } = props
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('id')))
   const [width, setWidth] = useState(window.innerWidth)
   const [, setIsMobile] = useState(false)
@@ -47,12 +46,12 @@ const App = (props: AppProps) => {
 
 
   useEffect(() => {
-    if (loginData.id || registerData.id.length !== 0) {
+    if (checkToken()) {
       setIsLoggedIn(Boolean(setIsLoggedIn))
     } else {
       setIsLoggedIn(Boolean(localStorage.getItem('id')))
     }
-  }, [loginData.id, registerData.id])
+  }, [authData])
 
   return (
     <Router history={history}>

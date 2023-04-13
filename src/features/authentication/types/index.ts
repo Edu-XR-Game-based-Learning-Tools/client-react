@@ -1,52 +1,38 @@
-export interface RegisterType {
-  access_token: string
-  id: string
+export interface AccessToken {
+  token: string
+  expiresIn: number
+  issuedAt: Date
 }
 
-export const initRegister: RegisterType = {
-  access_token: '',
-  id: '',
+export interface AuthType {
+  accessToken: AccessToken | null
+  refreshToken: string
+  message: string
+  success: boolean
 }
 
-export interface LoginType extends RegisterType {
-  email: string
-  firstName: string
-  lastName: string
-  avatarUrl: string | null
-  role: string
-  themeId: number
-  backgroundColor: string | null
-  btnBackgroundColor: string | null
-  btnTextColor: string | null
-  linkColor: string | null
-  backgroundColorOpacity: number | null
-}
-
-export const initLogin: LoginType = {
-  id: '',
-  access_token: '',
-  email: '',
-  firstName: '',
-  lastName: '',
-  avatarUrl: null,
-  role: '',
-  themeId: 0,
-  backgroundColor: null,
-  btnBackgroundColor: null,
-  btnTextColor: null,
-  linkColor: null,
-  backgroundColorOpacity: null,
+export const initAuth: AuthType = {
+  accessToken: null,
+  refreshToken: '',
+  message: '',
+  success: false
 }
 
 export interface RegisterActionType {
   username: string
   email: string
   password: string
+  repassword: string
 }
 
 export interface LoginActionType {
   username: string
   password: string
+}
+
+export interface RefreshTokenActionType {
+  accessToken: string
+  refreshToken: string
 }
 
 export interface UserInfo {

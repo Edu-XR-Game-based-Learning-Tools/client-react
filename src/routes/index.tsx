@@ -33,8 +33,8 @@ const AppRoutes = (props: RoutesProps) => {
             <Route path="/" element={<HomePage />} />
           </Route>
           <Route path="/about" element={<AboutPage />} />
-          <Route element={<NotFoundPage />} />
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   )
