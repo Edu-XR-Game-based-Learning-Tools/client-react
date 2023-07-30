@@ -69,9 +69,8 @@ function makeApi(baseURL: string) {
 
       const authToken: AuthType = JSON.parse(token)
       if (authToken && authToken.accessToken) {
-        config.headers = {
-          ...config.headers,
-          Authorization: `Bearer ${authToken.accessToken.token}`,
+        if (config && config.headers) {
+          config.headers.Authorization = `Bearer ${authToken.accessToken.token}`;
         }
       }
 

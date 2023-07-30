@@ -1,4 +1,4 @@
-import ReactDOM from 'react-dom'
+import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 
 import App from 'App'
@@ -9,11 +9,12 @@ import { history, store } from 'store'
 
 // initMockServiceWorker()
 
-ReactDOM.render(
+const root = createRoot(document.getElementById("root") as HTMLElement);
+
+root.render(
   <Provider store={store}>
     <App history={history} />
-  </Provider>,
-  document.getElementById('root'),
+  </Provider>
 )
 
 // If you want to start measuring performance in your app, pass a function

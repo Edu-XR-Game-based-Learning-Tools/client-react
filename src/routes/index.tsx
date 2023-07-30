@@ -11,7 +11,8 @@ import PrivateRoute from './PrivateRoute'
 
 const LoginPage = React.lazy(() => import('pages/LoginPage'))
 const HomePage = React.lazy(() => import('pages/HomePage'))
-const AboutPage = React.lazy(() => import('pages/AboutPage'))
+const QuizArchivePage = React.lazy(() => import('pages/QuizArchivePage'))
+const EditQuizPage = React.lazy(() => import('pages/EditQuizPage'))
 const NotFoundPage = React.lazy(() => import('pages/NotFoundPage'))
 
 interface RoutesProps {
@@ -28,11 +29,12 @@ const AppRoutes = (props: RoutesProps) => {
     <Suspense fallback={<LibComponent isLoading={global.isLoading} />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route element={<Layout />}>
-          <Route path="/" element={<PrivateRoute isLoggedIn={isLoggedIn} />} >
+        <Route path="/" element={<PrivateRoute isLoggedIn={isLoggedIn} />} >
+          <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/archive" element={<QuizArchivePage />} />
+            <Route path="/edit/:id" element={<EditQuizPage />} />
           </Route>
-          <Route path="/about" element={<AboutPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

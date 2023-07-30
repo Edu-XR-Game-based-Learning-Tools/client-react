@@ -15,18 +15,17 @@ import { RegisterActionType } from 'features/authentication'
 import { useAuthenticationService } from 'features/authentication/hooks'
 import { ReducerType } from 'store'
 
-import useStyles from '../SharedStyles/loginStyles'
+import classes from '../SharedStyles/loginStyles'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const mapStateToProps = (state: ReducerType) => {
-}
+const mapStateToProps = (state: ReducerType) => ({
+})
 
 interface RegisterProps {
   setLogin: () => void
 }
 
 const Register = (props: RegisterProps) => {
-  const classes = useStyles()
   const { setLogin } = props
   const [isShowPass, setIsShowPass] = useState(false)
   const [isShowRePass, setIsShowRePass] = useState(false)

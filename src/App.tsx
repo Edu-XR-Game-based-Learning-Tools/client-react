@@ -23,7 +23,7 @@ const mapStateToProps = (state: ReducerType) => ({
 
 const App = (props: AppProps) => {
   const { history, authData } = props
-  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('id')))
+  const [isLoggedIn, setIsLoggedIn] = useState(checkToken())
   const [width, setWidth] = useState(window.innerWidth)
   const [, setIsMobile] = useState(false)
 
@@ -46,17 +46,22 @@ const App = (props: AppProps) => {
 
 
   useEffect(() => {
-    if (checkToken()) {
+    if (authData.accessToken) {
       setIsLoggedIn(Boolean(setIsLoggedIn))
     } else {
-      setIsLoggedIn(Boolean(localStorage.getItem('id')))
+      setIsLoggedIn(checkToken())
     }
   }, [authData])
 
   return (
-    <Router history={history}>
-      <AppRoutes isLoggedIn={isLoggedIn} />
-    </Router>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(107.56deg, #aaccdd 12.02%, #bbddff 62.02%)',
+    }}>
+      <Router history={history}>
+        <AppRoutes isLoggedIn={isLoggedIn} />
+      </Router>
+    </div>
   )
 }
 
