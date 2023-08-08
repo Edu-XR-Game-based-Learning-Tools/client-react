@@ -147,6 +147,9 @@ yarn install
 
 ### Development
 
+- To configure firebase storage cors: https://firebase.google.com/docs/storage/web/download-files#cors_configuration
+cors.json is used for firebase storage cors: gsutil cors set cors.json gs://user-e8717.appspot.com
+
 To start the application in the development mode run:
 
 ```shell

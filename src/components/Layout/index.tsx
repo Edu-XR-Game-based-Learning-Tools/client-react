@@ -45,7 +45,6 @@ const Layout = () => {
         <main>
           <Box
             sx={{
-              bgcolor: 'background.paper',
               pt: 3,
               pb: 3,
             }}

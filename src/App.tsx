@@ -1,10 +1,11 @@
 import { History } from 'history'
 import { useEffect, useState } from 'react'
 import { connect } from 'react-redux'
+import { ToastContainer } from 'react-toastify'
 import { HistoryRouter as Router } from 'redux-first-history/rr6'
 
 import 'App.css'
-import { initUserPreference, AuthType, UserPreference } from 'features/authentication'
+import { AuthType, UserPreference, initUserPreference } from 'features/authentication'
 import { checkToken } from 'libs/core/configureAxios'
 import AppRoutes from 'routes'
 import { ReducerType } from 'store'
@@ -23,7 +24,7 @@ const mapStateToProps = (state: ReducerType) => ({
 
 const App = (props: AppProps) => {
   const { history, authData } = props
-  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('id')))
+  const [isLoggedIn, setIsLoggedIn] = useState(checkToken())
   const [width, setWidth] = useState(window.innerWidth)
   const [, setIsMobile] = useState(false)
 
@@ -44,19 +45,34 @@ const App = (props: AppProps) => {
     }
   }, [width])
 
-
   useEffect(() => {
-    if (checkToken()) {
+    if (authData.accessToken) {
       setIsLoggedIn(Boolean(setIsLoggedIn))
     } else {
-      setIsLoggedIn(Boolean(localStorage.getItem('id')))
+      setIsLoggedIn(checkToken())
     }
   }, [authData])
 
   return (
-    <Router history={history}>
-      <AppRoutes isLoggedIn={isLoggedIn} />
-    </Router>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(107.56deg, #aaccdd 12.02%, #bbddff 62.02%)',
+    }}>
+      <Router history={history}>
+        <AppRoutes isLoggedIn={isLoggedIn} />
+        <ToastContainer
+          position='top-right'
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+      </Router>
+    </div>
   )
 }
 

@@ -1,9 +1,11 @@
 import { Backdrop, CircularProgress, Grid, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { connect } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 
 import images from 'config/images'
+import { checkToken } from 'libs/core/configureAxios'
 import { ReducerType } from 'store'
 
 import { AuthType } from '../types'
@@ -11,7 +13,6 @@ import { AuthType } from '../types'
 import LandingPage from './LandingPage'
 import Login from './Login'
 import Register from './Register'
-import useStyles from './styles'
 
 const mapStateToProps = (state: ReducerType) => ({
   authData: state.authentication.authData,
@@ -24,21 +25,21 @@ interface AuthProps {
 }
 
 const AuthenticationContainer = (props: AuthProps) => {
+  const { t } = useTranslation()
   const { authData, isLoading } = props
   const [isLoginPage, setIsLoginPage] = useState(true)
-  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem('id')))
+  const [isLoggedIn, setIsLoggedIn] = useState(checkToken())
   const navigate = useNavigate()
-  const classes = useStyles()
 
   const setLogin = () => {
     setIsLoginPage(!isLoginPage)
   }
 
   useEffect(() => {
-    if (authData.accessToken != null) {
+    if (authData.accessToken) {
       setIsLoggedIn(Boolean(setIsLoggedIn))
     } else {
-      setIsLoggedIn(Boolean(localStorage.getItem('id')))
+      setIsLoggedIn(checkToken())
     }
   }, [authData])
 
@@ -49,16 +50,40 @@ const AuthenticationContainer = (props: AuthProps) => {
   }, [navigate, isLoggedIn])
 
   return (
-    <Grid container classes={{ root: classes.root }}>
-      <Grid container item xs={6} classes={{ root: classes.rootApp }}>
-        <Grid container classes={{ root: classes.rootAppNameContainer }}>
+    <Grid container style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(107.56deg, #222629 12.02%, #1E453E 62.02%)',
+    }}>
+      <Grid container item xs={6} style={{ padding: '5rem 0 0 8rem', }}>
+        <Grid container style={{ height: 'fit-content', }}>
           <img src={images.AppIcon} alt={images.AppIcon} />
-          <Typography classes={{ root: classes.rootAppName }}>GBLT</Typography>
+          <Typography style={{
+            fontSize: '5rem',
+            fontFamily: 'Poppins',
+            background: '-webkit-linear-gradient(180deg, #FCE38A 0%, #CC2A2A 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginLeft: '2rem',
+          }}>{t('company.title')}</Typography>
         </Grid>
         <Grid item xs={12}>
-          <Typography classes={{ root: classes.slogan }}>
+          <Typography style={{
+            fontSize: '4rem',
+            fontWeight: 'bold',
+            background: '-webkit-linear-gradient(180deg, #B3B990 100%, #86C232 47%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontFamily: 'Poppins',
+          }}>
             Join the
-            <span className={classes.rootFun}> fun.</span>
+            <span style={{
+              fontSize: '6rem',
+              background: '-webkit-linear-gradient(180deg, #86C232 100%, #86C232 100%)',
+              WebkitBackgroundClip: 'text',
+              fontWeight: 'bold',
+              WebkitTextFillColor: 'transparent',
+              fontFamily: 'Poppins',
+            }}> fun.</span>
           </Typography>
         </Grid>
         <img src={images.GameIcon} alt={images.GameIcon} style={{
@@ -72,7 +97,10 @@ const AuthenticationContainer = (props: AuthProps) => {
         {isLoginPage ? <Login setLogin={setLogin} /> : <Register setLogin={setLogin} />}
       </Grid>
       <LandingPage />
-      <Backdrop className={classes.backdrop} open={isLoading}>
+      <Backdrop style={{
+        zIndex: 1,
+        color: '#fff',
+      }} open={isLoading}>
         <CircularProgress style={{ color: '#E9781C' }} />
       </Backdrop>
     </Grid>

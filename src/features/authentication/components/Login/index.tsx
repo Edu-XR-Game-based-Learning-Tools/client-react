@@ -10,7 +10,7 @@ import { useAuthenticationService } from 'features/authentication/hooks'
 import { LoginActionType } from 'features/authentication/types'
 import { ReducerType } from 'store'
 
-import useStyles from '../SharedStyles/loginStyles'
+import classes from '../SharedStyles/loginStyles'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mapStateToProps = (state: ReducerType) => ({
@@ -24,7 +24,6 @@ const Login = (props: LoginProps) => {
   const { setLogin } = props
   const [isShowPass, setIsShowPass] = useState(false)
   const { handleSubmit, register, formState: { errors } } = useForm<LoginActionType>()
-  const classes = useStyles()
   const { login } = useAuthenticationService.default()
 
   const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {

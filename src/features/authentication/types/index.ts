@@ -1,14 +1,17 @@
+export interface ResponseMessage {
+  message: string
+  success: boolean
+}
+
 export interface AccessToken {
   token: string
   expiresIn: number
   issuedAt: Date
 }
 
-export interface AuthType {
+export interface AuthType extends ResponseMessage {
   accessToken: AccessToken | null
   refreshToken: string
-  message: string
-  success: boolean
 }
 
 export const initAuth: AuthType = {

@@ -1,6 +1,9 @@
 {
+  "company": {
+    "title": "GBLT"
+  },
   "home": {
-    "title": "Posts",
+    "title": "Welcome to GBLT Archive",
     "form": {
       "title": "title",
       "body": "body",
@@ -17,17 +20,15 @@
       "update": "Update"
     }
   },
-  "about": {
-    "title": "About Page",
-    "back": "Back to Home"
-  },
-  "company": {
-    "title": "Company name"
+  "archive": {
+    "title": "Archive",
+    "start": "Start"
   },
   "navigation": {
     "links": {
       "home": "Home",
-      "about": "About"
+      "archive": "archive",
+      "logout": "Logout"
     }
   }
 }
