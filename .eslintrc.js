@@ -35,7 +35,7 @@ module.exports = {
     },
   },
   'rules': {
-	'no-console': 'off',
+    'no-console': 'off',
     'jest/expect-expect': [
       'error',
       {
@@ -73,7 +73,6 @@ module.exports = {
 
     "no-param-reassign": 0,
     "@typescript-eslint/indent": ["error", 2],
-    "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/no-explicit-any": "error",
   },
   parserOptions: {

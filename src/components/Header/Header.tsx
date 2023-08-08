@@ -29,6 +29,8 @@ const Header = (props: HeaderProps) => {
     logout()
   }
 
+  const navColor = '#f6cd7f'
+
   return (
     <>
       <AppBar
@@ -36,7 +38,7 @@ const Header = (props: HeaderProps) => {
         elevation={0}
         sx={{ borderBottom: theme => `1px solid ${theme.palette.divider}` }}
         style={{
-          background: 'linear-gradient(0, rgb(187 221 255), rgb(69 91 123))',
+          background: '#222',
           border: 0
         }}
       >
@@ -45,7 +47,6 @@ const Header = (props: HeaderProps) => {
             component={RouterLink}
             to={'/'}
             variant="button"
-            color="text.primary"
             underline="none"
             display={'flex'}
             alignItems={'center'}
@@ -67,8 +68,8 @@ const Header = (props: HeaderProps) => {
                 component={RouterLink}
                 to={'/archive'}
                 variant="button"
-                color="text.primary"
                 underline="none"
+                style={{ fontWeight: 'bold', fontSize: '1rem', color: navColor }}
               >
                 {t('navigation.links.archive')}
               </Link>
@@ -89,7 +90,7 @@ const Header = (props: HeaderProps) => {
             </Grid> */}
             <Grid item xs={'auto'}>
               <Button onClick={onLogoutClick}>
-                <LogoutIcon />
+                <LogoutIcon style={{ color: navColor }} />
               </Button>
             </Grid>
           </Grid>

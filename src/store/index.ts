@@ -7,7 +7,6 @@ import logger from 'redux-logger'
 import { Env } from 'config/Env'
 import authenticationReducer, { AuthenticationState } from 'features/authentication/store/slice'
 import globalReducer, { GlobalState } from 'features/global/store/slice'
-import postsReducer from 'features/posts/store/posts.slice'
 import quizArchiveReducer, { QuizArchiveState } from 'features/quizArchive/store/slice'
 
 import { rootSaga } from './rootSaga'
@@ -27,7 +26,6 @@ const makeStore = () => {
       global: globalReducer,
       authentication: authenticationReducer,
       quizArchive: quizArchiveReducer,
-      posts: postsReducer,
     },
     devTools: Env.isDev(),
     middleware: getDefaultMiddleware =>

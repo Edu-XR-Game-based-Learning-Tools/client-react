@@ -3,54 +3,50 @@ import { useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 
 import { quizArchiveActions, quizArchiveSelectors } from '../store'
-import { QuizData, QuizList } from '../types'
+import { QuizCollectionDto, QuizCollectionListDto } from '../types'
 
 export type Operators = {
-  quizList: QuizList
-  editQuiz: QuizData
-  getQuizList: () => void
-  getQuiz: (data: number) => void
-  updateQuiz: (data: QuizData) => void
-  deleteQuiz: (data: QuizData) => void
+  quizList: QuizCollectionListDto
+  editQuiz: QuizCollectionDto
+  getQuizCollectionList: () => void
+  getQuizCollection: (data: number) => void
+  updateQuizCollection: (data: QuizCollectionDto) => void
+  deleteQuizCollection: (data: QuizCollectionDto) => void
 }
 
-/**
- * PostService custom-hooks
- * @see https://reactjs.org/docs/hooks-custom.html
- */
-const useService = (): Readonly<Operators> => {
+const useQuizArchiveService = (): Readonly<Operators> => {
   const dispatch = useAppDispatch()
   const selects = useAppSelector(quizArchiveSelectors)
 
   return {
-    quizList: selects.quizList,
-    editQuiz: selects.editQuiz,
+    quizList: selects.quizCollectionList,
+    editQuiz: selects.editCollection,
 
-    getQuizList: useCallback(
+    getQuizCollectionList: useCallback(
       () => {
-        dispatch(quizArchiveActions.getQuizList())
+        dispatch(quizArchiveActions.getQuizCollectionList())
       },
       [dispatch],
     ),
-    getQuiz: useCallback(
+    getQuizCollection: useCallback(
       (data: number) => {
-        dispatch(quizArchiveActions.getQuiz(data))
+        dispatch(quizArchiveActions.getQuizCollection(data))
       },
       [dispatch],
     ),
-    updateQuiz: useCallback(
-      (data: QuizData) => {
-        dispatch(quizArchiveActions.updateQuiz(data))
+    updateQuizCollection: useCallback(
+      (data: QuizCollectionDto) => {
+        dispatch(quizArchiveActions.updateQuizCollection(data))
       },
       [dispatch],
     ),
-    deleteQuiz: useCallback(
-      (data: QuizData) => {
-        dispatch(quizArchiveActions.deleteQuiz(data))
+    deleteQuizCollection: useCallback(
+      (data: QuizCollectionDto) => {
+        dispatch(quizArchiveActions.deleteQuizCollection(data))
       },
       [dispatch],
     ),
   }
 }
 
-export default useService
+export default useQuizArchiveService

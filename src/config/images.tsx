@@ -7,6 +7,7 @@ import InfoIcon from '@mui/icons-material/Info'
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft'
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
+import SaveIcon from '@mui/icons-material/Save'
 import SearchIcon from '@mui/icons-material/Search'
 import UpdateIcon from '@mui/icons-material/Update'
 import ViewInAr from '@mui/icons-material/ViewInAr'
@@ -24,6 +25,7 @@ export default {
   DeleteIcon,
   SearchIcon,
   EditIcon,
+  SaveIcon,
   AddIcon,
   UpdateIcon,
   MoreHorizIcon,

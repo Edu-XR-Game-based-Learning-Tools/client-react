@@ -4,21 +4,21 @@ import { call, put, takeEvery } from 'redux-saga/effects'
 
 import * as globalStore from 'features/global/store'
 
-import { deleteQuiz, getQuiz, getQuizList, updateQuiz } from '../services'
-import { QuizList, QuizData } from '../types'
+import { deleteQuizCollection, getQuizCollection, getQuizCollectionList, updateQuizCollection } from '../services'
+import { QuizCollectionDto, QuizCollectionListDto, initQuizCollectionDto } from '../types'
 
 import { quizArchiveActions } from './slice'
 
 // Worker Sagas
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function* onGetQuizList(_: {
-  type: typeof quizArchiveActions.getQuizList
+function* onGetQuizCollectionList(_: {
+  type: typeof quizArchiveActions.getQuizCollectionList
 }): SagaIterator {
   yield put(globalStore.globalActions.setIsLoading(true))
   try {
-    const res: QuizList = yield call(getQuizList)
+    const res: QuizCollectionListDto = yield call(getQuizCollectionList)
     if (res.success) {
-      yield put(quizArchiveActions.setQuizList(res))
+      yield put(quizArchiveActions.setQuizCollectionList(res))
     } else {
       toast.error(res.message)
     }
@@ -28,17 +28,43 @@ function* onGetQuizList(_: {
   yield put(globalStore.globalActions.setIsLoading(false))
 }
 
-function* onGetQuiz({
+function* onGetQuizCollection({
   payload,
 }: {
-  type: typeof quizArchiveActions.getQuiz
+  type: typeof quizArchiveActions.getQuizCollection
   payload: number
 }): SagaIterator {
   yield put(globalStore.globalActions.setIsLoading(true))
   try {
-    const res: QuizData = yield call(getQuiz, payload)
+    const res: QuizCollectionDto = yield call(getQuizCollection, payload)
     if (res.success) {
-      yield put(quizArchiveActions.setEditQuiz(res))
+      yield put(quizArchiveActions.setEditCollection(res))
+    } else {
+      toast.error(res.message)
+      yield put(quizArchiveActions.setEditCollection(initQuizCollectionDto))
+    }
+  } catch (error) {
+    toast.error(error)
+    yield put(quizArchiveActions.setEditCollection(initQuizCollectionDto))
+  }
+  yield put(globalStore.globalActions.setIsLoading(false))
+}
+
+function* onUpdateQuizCollection({
+  payload,
+}: {
+  type: typeof quizArchiveActions.updateQuizCollection
+  payload: QuizCollectionDto
+}): SagaIterator {
+  yield put(globalStore.globalActions.setIsLoading(true))
+  try {
+    const isAdd = payload.eId == null
+    const res: QuizCollectionDto = yield call(updateQuizCollection, payload)
+    if (res.success) {
+      if (isAdd)
+        yield put(quizArchiveActions.setAddCollection(res))
+      else
+        yield put(quizArchiveActions.setEditCollection(res))
     } else {
       toast.error(res.message)
     }
@@ -48,37 +74,17 @@ function* onGetQuiz({
   yield put(globalStore.globalActions.setIsLoading(false))
 }
 
-function* onUpdateQuiz({
+function* onDeleteQuizCollection({
   payload,
 }: {
-  type: typeof quizArchiveActions.updateQuiz
-  payload: QuizData
+  type: typeof quizArchiveActions.deleteQuizCollection
+  payload: QuizCollectionDto
 }): SagaIterator {
   yield put(globalStore.globalActions.setIsLoading(true))
   try {
-    const res: QuizData = yield call(updateQuiz, payload)
+    const res: QuizCollectionDto = yield call(deleteQuizCollection, payload)
     if (res.success) {
-      yield put(quizArchiveActions.setEditQuiz(res))
-    } else {
-      toast.error(res.message)
-    }
-  } catch (error) {
-    toast.error(error)
-  }
-  yield put(globalStore.globalActions.setIsLoading(false))
-}
-
-function* onDeleteQuiz({
-  payload,
-}: {
-  type: typeof quizArchiveActions.deleteQuiz
-  payload: QuizData
-}): SagaIterator {
-  yield put(globalStore.globalActions.setIsLoading(true))
-  try {
-    const res: QuizList = yield call(deleteQuiz, payload)
-    if (res.success) {
-      yield put(quizArchiveActions.setQuizList(res))
+      yield put(quizArchiveActions.setEditCollection(res))
     } else {
       toast.error(res.message)
     }
@@ -89,9 +95,9 @@ function* onDeleteQuiz({
 }
 
 // Watcher Saga
-export function* authenticationWatcherSaga(): SagaIterator {
-  yield takeEvery(quizArchiveActions.getQuizList.type, onGetQuizList)
-  yield takeEvery(quizArchiveActions.getQuiz.type, onGetQuiz)
-  yield takeEvery(quizArchiveActions.updateQuiz.type, onUpdateQuiz)
-  yield takeEvery(quizArchiveActions.deleteQuiz.type, onDeleteQuiz)
+export function* quizArchiveWatcherSaga(): SagaIterator {
+  yield takeEvery(quizArchiveActions.getQuizCollectionList.type, onGetQuizCollectionList)
+  yield takeEvery(quizArchiveActions.getQuizCollection.type, onGetQuizCollection)
+  yield takeEvery(quizArchiveActions.updateQuizCollection.type, onUpdateQuizCollection)
+  yield takeEvery(quizArchiveActions.deleteQuizCollection.type, onDeleteQuizCollection)
 }

@@ -11,10 +11,6 @@ export type Operators = {
   register: (data: RegisterActionType) => void
 }
 
-/**
- * PostService custom-hooks
- * @see https://reactjs.org/docs/hooks-custom.html
- */
 const useService = (): Readonly<Operators> => {
   const dispatch = useAppDispatch()
   const selects = useAppSelector(authenticationSelectors)

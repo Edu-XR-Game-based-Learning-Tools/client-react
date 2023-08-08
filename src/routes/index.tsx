@@ -4,7 +4,7 @@ import { Route, Routes } from 'react-router-dom'
 
 import Layout from 'components/Layout'
 import { GlobalState } from 'features/global'
-import LibComponent from 'libs/ui/components/Loading'
+import LoadingComponent from 'libs/ui/components/Loading'
 import { ReducerType } from 'store'
 
 import PrivateRoute from './PrivateRoute'
@@ -26,14 +26,14 @@ const AppRoutes = (props: RoutesProps) => {
   const { global, isLoggedIn } = props
 
   return (
-    <Suspense fallback={<LibComponent isLoading={global.isLoading} />}>
+    <Suspense fallback={<LoadingComponent isLoading={global.isLoading} />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<PrivateRoute isLoggedIn={isLoggedIn} />} >
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/archive" element={<QuizArchivePage />} />
-            <Route path="/edit/:id" element={<EditQuizPage />} />
+            <Route path="/archive/edit/:id" element={<EditQuizPage />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />

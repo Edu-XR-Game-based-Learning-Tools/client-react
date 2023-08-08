@@ -1,28 +1,28 @@
 import { DEFAULT_TIMEOUT } from 'config/defines'
 import axiosInstance from 'libs/core/configureAxios'
 
-import { QuizData, QuizList } from '../types'
+import { QuizCollectionDto, QuizCollectionListDto } from '../types'
 
 const BASE_URL = `/api/quiz`
 
-export const getQuizList = (): Promise<QuizList> =>
-  axiosInstance.get(`${BASE_URL}/getQuizList`, {
+export const getQuizCollectionList = (): Promise<QuizCollectionListDto> =>
+  axiosInstance.get(`${BASE_URL}/getQuizCollectionList`, {
     signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
   })
 
-export const getQuiz = (id: number): Promise<QuizData> =>
-  axiosInstance.get(`${BASE_URL}/getQuiz`, {
+export const getQuizCollection = (id: number): Promise<QuizCollectionDto> =>
+  axiosInstance.get(`${BASE_URL}/getQuizCollection`, {
     signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
-    params: id
+    params: { id }
   })
 
-export const updateQuiz = (payload: QuizData): Promise<QuizData> =>
-  axiosInstance.post(`${BASE_URL}/updateQuiz`, payload, {
+export const updateQuizCollection = (payload: QuizCollectionDto): Promise<QuizCollectionDto> =>
+  axiosInstance.post(`${BASE_URL}/updateQuizCollection`, payload, {
     signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
   })
 
-export const deleteQuiz = (payload: QuizData): Promise<QuizList> =>
-  axiosInstance.delete(`${BASE_URL}/deleteQuiz`, {
+export const deleteQuizCollection = (payload: QuizCollectionDto): Promise<QuizCollectionListDto> =>
+  axiosInstance.delete(`${BASE_URL}/deleteQuizCollection`, {
     signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
     data: payload
   })

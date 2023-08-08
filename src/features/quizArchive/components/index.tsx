@@ -1,28 +1,45 @@
 /* eslint-disable @typescript-eslint/indent */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Box, Button, Checkbox, Grid, IconButton, InputBase, Menu, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Toolbar, Tooltip, Typography } from '@mui/material'
+import { Box, Checkbox, Grid, IconButton, InputBase, Menu, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, TextField, Toolbar, Tooltip, Typography } from '@mui/material'
 import { alpha, styled } from '@mui/material/styles'
 import { visuallyHidden } from '@mui/utils'
-import { useCallback, useEffect, useState } from 'react'
+import { ActionCreatorWithPayload } from '@reduxjs/toolkit/dist/createAction'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { connect } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 
 import images from 'config/images'
 import { AuthType } from 'features/authentication'
+import LoadingComponent from 'libs/ui/components/Loading'
+import { isNullOrUndefined } from 'libs/utility'
+import { Order, getComparator, stableSort } from 'libs/utility/pagination'
 import { ReducerType } from 'store'
+import { useAppDispatch } from 'store/hooks'
+
+import useQuizArchiveService from '../hooks'
+import { quizArchiveActions } from '../store/slice'
+import { QuizCollectionDto, QuizCollectionListDto, initQuizCollectionDto } from '../types'
 
 const mapStateToProps = (state: ReducerType) => ({
+  quizCollectionList: state.quizArchive.quizCollectionList,
+  editCollection: state.quizArchive.editCollection,
+  addCollection: state.quizArchive.addCollection,
+  setAddCollection: quizArchiveActions.setAddCollection,
   authData: state.authentication.authData,
   isLoading: state.global.isLoading,
 })
 
-interface AuthProps {
+interface Props {
+  quizCollectionList: QuizCollectionListDto
+  editCollection: QuizCollectionDto
+  addCollection: QuizCollectionDto
+  setAddCollection: ActionCreatorWithPayload<QuizCollectionDto, "quizArchive/setAddCollection">
   authData: AuthType
   isLoading: boolean
 }
 
-
+// #region Style
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
   borderRadius: theme.shape.borderRadius,
@@ -61,76 +78,48 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
   },
 }))
+// #endregion Style
 
-
-interface Data {
+// #region Pagination Data Type
+interface TableData {
   id: number
-  name: string
+  name: string | null
+  noQuiz: number
   updateTime: Date
   action: string | null
 }
 
-function createData(
+function createTableData(
   id: number,
+  noQuiz: number,
   name: string,
   updateTime: Date,
   action: string | null = null
-): Data {
+): TableData {
   return {
     id,
+    noQuiz,
     name,
     updateTime,
     action
   }
 }
 
-const rows = [
-  createData(0, 'Cupcake', new Date()),
-  createData(1, 'Cupcake', new Date(new Date().setDate(new Date().getDate() - 1))),
-]
-
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1
+function createTableDataFromDto(
+  dto: QuizCollectionDto,
+  action: string | null = null
+): TableData {
+  return {
+    id: dto.eId ?? -1,
+    noQuiz: dto.quizzes.length,
+    name: dto.name,
+    updateTime: dto.updatedAt ? new Date(dto.updatedAt.toString()) : new Date(),
+    action
   }
-  if (b[orderBy] > a[orderBy]) {
-    return 1
-  }
-  return 0
-}
-
-type Order = 'asc' | 'desc'
-
-function getComparator<Key extends keyof never>(
-  order: Order,
-  orderBy: Key,
-): (
-  a: { [key in Key]: number | string | Date | null },
-  b: { [key in Key]: number | string | Date | null },
-) => number {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy)
-}
-
-// Since 2020 all major browsers ensure sort stability with Array.prototype.sort().
-// stableSort() brings sort stability to non-modern browsers (notably IE11). If you
-// only support modern browsers you can replace stableSort(exampleArray, exampleComparator)
-// with exampleArray.slice().sort(exampleComparator)
-function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) {
-  const stabilizedThis = array.map((el, index) => [el, index] as [T, number])
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0])
-    if (order !== 0) {
-      return order
-    }
-    return a[1] - b[1]
-  })
-  return stabilizedThis.map((el) => el[0])
 }
 
 interface HeadCell {
-  id: keyof Data
+  id: keyof TableData
   label: string | null
   sortable: boolean
   align: 'left' | 'center' | 'right'
@@ -150,6 +139,12 @@ const headCells: readonly HeadCell[] = [
     align: 'left'
   },
   {
+    id: 'noQuiz',
+    label: 'Number of Quiz',
+    sortable: true,
+    align: 'left'
+  },
+  {
     id: 'action',
     label: 'Actions',
     sortable: false,
@@ -157,26 +152,91 @@ const headCells: readonly HeadCell[] = [
   }
 ]
 
-const DEFAULT_ORDER = 'asc'
-const DEFAULT_ORDER_BY = 'updateTime'
-const DEFAULT_ROWS_PER_PAGE = 5
-const DEFAULT_ROWS_PER_PAGE_LIST = [5, 10, 20]
-
-
 interface EnhancedTableProps {
   numSelected: number
-  onRequestSort: (event: React.MouseEvent<unknown>, newOrderBy: keyof Data) => void
+  onRequestSort: (event: React.MouseEvent<unknown>, newOrderBy: keyof TableData) => void
   onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void
   order: Order
   orderBy: string
   rowCount: number
 }
 
+interface EnhancedTableToolbarProps {
+  numSelected: number
+}
+
+const DEFAULT_ORDER = 'desc'
+const DEFAULT_ORDER_BY = 'updateTime'
+const DEFAULT_ROWS_PER_PAGE = Number.MAX_SAFE_INTEGER
+const DEFAULT_ROWS_PER_PAGE_LIST = [Number.MAX_SAFE_INTEGER]
+// #endregion Pagination Data Type
+
+const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
+  const { numSelected } = props
+  const { updateQuizCollection } = useQuizArchiveService()
+
+  const handleAddNew = useCallback((event) => {
+    event?.stopPropagation()
+    updateQuizCollection(initQuizCollectionDto)
+  }, [updateQuizCollection])
+
+  return (
+    <Toolbar
+      sx={{
+        pl: { sm: 2 },
+        pr: { xs: 1, sm: 1 },
+        ...(numSelected > 0 && {
+          bgcolor: (theme) =>
+            alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
+        }),
+      }}
+    >
+      {numSelected > 0 ? (
+        <>
+          <Typography
+            sx={{ flex: '1 1 100%' }}
+            color="inherit"
+            variant="subtitle1"
+            component="div"
+          >
+            {numSelected} selected
+          </Typography>
+          <Tooltip title="Delete">
+            <IconButton>
+              <images.DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </>
+      ) : (
+        <Box
+          display={'flex'}
+          sx={{ flex: '1 1 100%' }}
+          justifyContent={'space-between'}>
+          <Search>
+            <SearchIconWrapper>
+              <images.SearchIcon />
+            </SearchIconWrapper>
+            <StyledInputBase
+              placeholder="Search…"
+              inputProps={{ 'aria-label': 'search' }}
+            />
+          </Search>
+          <Tooltip title="Add">
+            <IconButton onClick={handleAddNew}>
+              <images.AddIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
+    </Toolbar>
+  )
+}
+
 const EnhancedTableHead = (props: EnhancedTableProps) => {
   const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
     props
   const createSortHandler =
-    (newOrderBy: keyof Data) => (event: React.MouseEvent<unknown>) => {
+    (newOrderBy: keyof TableData) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, newOrderBy)
     }
 
@@ -223,89 +283,59 @@ const EnhancedTableHead = (props: EnhancedTableProps) => {
   )
 }
 
-interface EnhancedTableToolbarProps {
-  numSelected: number
-}
-
-const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
-  const { numSelected } = props
-
-  return (
-    <Toolbar
-      sx={{
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 },
-        ...(numSelected > 0 && {
-          bgcolor: (theme) =>
-            alpha(theme.palette.primary.main, theme.palette.action.activatedOpacity),
-        }),
-      }}
-    >
-      {numSelected > 0 ? (
-        <>
-          <Typography
-            sx={{ flex: '1 1 100%' }}
-            color="inherit"
-            variant="subtitle1"
-            component="div"
-          >
-            {numSelected} selected
-          </Typography>
-          <Tooltip title="Delete">
-            <IconButton>
-              <images.DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </>
-      ) : (
-        <Box
-          display={'flex'}
-          sx={{ flex: '1 1 100%' }}
-          justifyContent={'space-between'}>
-          <Search>
-            <SearchIconWrapper>
-              <images.SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Search…"
-              inputProps={{ 'aria-label': 'search' }}
-            />
-          </Search>
-          <Tooltip title="Add">
-            <IconButton>
-              <images.AddIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )}
-    </Toolbar>
-  )
-}
-
-const ArchiveContainer = (props: AuthProps) => {
+const ArchiveContainer = (props: Props) => {
   const { t } = useTranslation()
-  const { authData, isLoading } = props
+  const { addCollection, setAddCollection, editCollection, quizCollectionList, isLoading } = props
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
+  const { getQuizCollectionList, updateQuizCollection, deleteQuizCollection } = useQuizArchiveService()
 
+  const tableData = useRef<TableData[]>([])
   const [order, setOrder] = useState<Order>(DEFAULT_ORDER)
-  const [orderBy, setOrderBy] = useState<keyof Data>(DEFAULT_ORDER_BY)
+  const [orderBy, setOrderBy] = useState<keyof TableData>(DEFAULT_ORDER_BY)
   const [selected, setSelected] = useState<readonly number[]>([])
   const [page, setPage] = useState(0)
-  const [visibleRows, setVisibleRows] = useState<Data[] | null>(null)
+  const [visibleRows, setVisibleRows] = useState<TableData[] | null>(null)
   const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE)
+  const [editFieldRows, setEditFieldRows] = useState<(string | null)[]>([])
 
-  // Menu horizontal
-  const [anchorMoreEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  // #region Menu horizontal
+  const [anchorEditEl, setAnchorEditEl] = useState<null | HTMLElement>(null)
+  const isEditOpen = Boolean(anchorEditEl)
+  const [anchorMoreEl, setAnchorMoreEl] = useState<null | HTMLElement>(null)
   const isMoreOpen = Boolean(anchorMoreEl)
+  const [anchorIndex, setAnchorIndex] = useState<number | null>(null)
 
-  const handleMoreClick = (event: React.MouseEvent<HTMLButtonElement> | null) => {
+  const handleEditClick = (event: React.MouseEvent<HTMLButtonElement> | null, index: number | null = null) => {
     event?.stopPropagation()
-    setAnchorEl(event == null ? event : event.currentTarget)
+    setAnchorIndex(index)
+    setAnchorEditEl(event == null ? event : event.currentTarget)
   }
 
+  const handleMoreClick = (event: React.MouseEvent<HTMLButtonElement> | null, index: number | null = null) => {
+    event?.stopPropagation()
+    setAnchorIndex(index)
+    setAnchorMoreEl(event == null ? event : event.currentTarget)
+  }
+
+  const hideAnchorMenu = useCallback(() => {
+    setAnchorIndex(null)
+    setAnchorEditEl(null)
+    setAnchorMoreEl(null)
+  }, [])
+  // #endregion Menu horizontal
+
+  // #region Refresh on Rerender
   useEffect(() => {
+    getQuizCollectionList()
+  }, [editCollection, getQuizCollectionList])
+
+  useEffect(() => {
+    if (!quizCollectionList.success || !quizCollectionList.collections) return
+    tableData.current = quizCollectionList.collections.map((ele) => createTableDataFromDto(ele))
+
     let rowsOnMount = stableSort(
-      rows,
+      tableData.current,
       getComparator(DEFAULT_ORDER, DEFAULT_ORDER_BY),
     )
     rowsOnMount = rowsOnMount.slice(
@@ -314,42 +344,92 @@ const ArchiveContainer = (props: AuthProps) => {
     )
 
     setVisibleRows(rowsOnMount)
-  }, [])
+  }, [quizCollectionList, tableData])
 
+  useEffect(() => {
+    if (!quizCollectionList.success || !quizCollectionList.collections) return
+    setEditFieldRows((prev) => {
+      const newData = quizCollectionList.collections.map((_, index) => prev[index])
+      return newData
+    })
+  }, [quizCollectionList])
+
+  useEffect(() => {
+    if (addCollection.eId) {
+      dispatch(setAddCollection(initQuizCollectionDto))
+      navigate(`/archive/edit/${addCollection.eId}`)
+    }
+  }, [addCollection.eId, dispatch, navigate, setAddCollection])
+  // #endregion Refresh on Rerender
+
+  // #region Paginate Data
+  const handleChangePage = useCallback(
+    (event: unknown, newPage: number) => {
+      setPage(newPage)
+
+      const sortedRows = stableSort(tableData.current, getComparator(order, orderBy))
+      const updatedRows = sortedRows.slice(
+        newPage * rowsPerPage,
+        newPage * rowsPerPage + rowsPerPage,
+      )
+      setVisibleRows(updatedRows)
+    },
+    [order, orderBy, rowsPerPage, tableData],
+  )
+
+  const handleChangeRowsPerPage = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const updatedRowsPerPage = parseInt(event.target.value, 10)
+      setRowsPerPage(updatedRowsPerPage)
+
+      setPage(0)
+
+      const sortedRows = stableSort(tableData.current, getComparator(order, orderBy))
+      const updatedRows = sortedRows.slice(
+        0 * updatedRowsPerPage,
+        0 * updatedRowsPerPage + updatedRowsPerPage,
+      )
+      setVisibleRows(updatedRows)
+    },
+    [order, orderBy, tableData],
+  )
+  // #endregion Paginate Data
+
+  // #region Arrange Data
   const handleRequestSort = useCallback(
-    (event: React.MouseEvent<unknown>, newOrderBy: keyof Data) => {
+    (event: React.MouseEvent<unknown>, newOrderBy: keyof TableData) => {
       const isAsc = orderBy === newOrderBy && order === 'asc'
       const toggledOrder = isAsc ? 'desc' : 'asc'
       setOrder(toggledOrder)
       setOrderBy(newOrderBy)
 
-      const sortedRows = stableSort(rows, getComparator(toggledOrder, newOrderBy))
+      const sortedRows = stableSort(tableData.current, getComparator(toggledOrder, newOrderBy))
       const updatedRows = sortedRows.slice(
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage,
       )
       setVisibleRows(updatedRows)
     },
-    [order, orderBy, page, rowsPerPage],
+    [order, orderBy, page, rowsPerPage, tableData],
   )
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id)
+      const newSelected = tableData.current.map((n) => n.id)
       setSelected(newSelected)
       return
     }
     setSelected([])
   }
 
-  const handleCheckboxClick = (event: React.MouseEvent<unknown>, id: number) => {
-    if (isMoreOpen) return
+  const handleCheckboxClick = (event: React.MouseEvent<unknown>, eId: number) => {
+    if (isMoreOpen || isEditOpen) return
 
-    const selectedIndex = selected.indexOf(id)
+    const selectedIndex = selected.indexOf(eId)
     let newSelected: readonly number[] = []
 
     if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id)
+      newSelected = newSelected.concat(selected, eId)
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1))
     } else if (selectedIndex === selected.length - 1) {
@@ -363,49 +443,213 @@ const ArchiveContainer = (props: AuthProps) => {
 
     setSelected(newSelected)
   }
+  // #endregion Arrange Data
 
-  const handleChangePage = useCallback(
-    (event: unknown, newPage: number) => {
-      setPage(newPage)
+  // #region Edit Data
+  const getIndexOfDataByRowIndex = useCallback((rowIndex: number): number | null => {
+    if (!visibleRows) return null
+    const data = quizCollectionList.collections.find((ele) => ele.eId === visibleRows[rowIndex].id)
+    console.log(rowIndex, visibleRows[rowIndex])
+    console.log(data)
+    if (!data) return null
+    const index = quizCollectionList.collections.indexOf(data)
+    console.log(index)
+    return index
+  }, [quizCollectionList.collections, visibleRows])
 
-      const sortedRows = stableSort(rows, getComparator(order, orderBy))
-      const updatedRows = sortedRows.slice(
-        newPage * rowsPerPage,
-        newPage * rowsPerPage + rowsPerPage,
-      )
-      setVisibleRows(updatedRows)
-    },
-    [order, orderBy, rowsPerPage],
-  )
+  const setEditFieldRowsCallback = useCallback((rowIndex, value) => {
+    setEditFieldRows((prev) => {
+      const newData = prev?.map(_ => _) ?? null
+      if (newData) newData[rowIndex] = value
+      return newData
+    })
+  }, [])
 
-  const handleChangeRowsPerPage = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const updatedRowsPerPage = parseInt(event.target.value, 10)
-      setRowsPerPage(updatedRowsPerPage)
-
-      setPage(0)
-
-      const sortedRows = stableSort(rows, getComparator(order, orderBy))
-      const updatedRows = sortedRows.slice(
-        0 * updatedRowsPerPage,
-        0 * updatedRowsPerPage + updatedRowsPerPage,
-      )
-      setVisibleRows(updatedRows)
-    },
-    [order, orderBy],
-  )
-
-  const handleEdit = useCallback((event, index) => {
+  const handleEditFieldClick = (event: React.MouseEvent, index: number) => {
     event?.stopPropagation()
-    navigate(`/edit/${index}`)
-  }, [navigate]);
+    const valueFromRow = visibleRows && !isNullOrUndefined(visibleRows[index].name) ? visibleRows[index].name : ''
+    setEditFieldRowsCallback(index, !isNullOrUndefined(editFieldRows[index]) ? null : valueFromRow)
+    hideAnchorMenu()
+  }
 
-  const handleDelete = useCallback((event, index) => {
+  const handleEditDetailsClick = (event: React.MouseEvent, rowIndex: number) => {
     event?.stopPropagation()
+    const index = getIndexOfDataByRowIndex(rowIndex)
+    if (index === null) return
+    navigate(`/archive/edit/${quizCollectionList.collections[index].eId}`)
+    hideAnchorMenu()
+  }
 
-  }, []);
+  const handleSaveClick = (event: React.MouseEvent, rowIndex: number) => {
+    event?.stopPropagation()
+    const index = getIndexOfDataByRowIndex(rowIndex)
+    if (index === null) return
+    const newDto = { ...quizCollectionList.collections[index], name: editFieldRows[rowIndex] }
+    updateQuizCollection(newDto)
+    setEditFieldRowsCallback(rowIndex, null)
+  }
+
+  const handleDeleteClick = (event: React.MouseEvent, rowIndex: number) => {
+    event?.stopPropagation()
+    const index = getIndexOfDataByRowIndex(rowIndex)
+    if (index === null) return
+    deleteQuizCollection(quizCollectionList.collections[index])
+    hideAnchorMenu()
+  }
+  // #endregion Edit Data
 
   const isSelected = (id: number) => selected.indexOf(id) !== -1
+
+  const rowNameField = function rowNameField(row: TableData, index: number) {
+    if (!visibleRows) return <></>
+
+    // console.log(index, editFieldRows[index])
+    return (
+      editFieldRows && !isNullOrUndefined(editFieldRows[index]) ?
+        <Box display={'flex'}>
+          <TextField
+            type='text'
+            required
+            value={editFieldRows[index]}
+            onClick={(evt) => evt?.stopPropagation()}
+            onChange={(evt) => {
+              setEditFieldRowsCallback(index, evt.target.value)
+            }}
+            variant='outlined'
+            multiline
+            maxRows={12}
+            sx={{
+              input: { color: 'white', height: '100%', border: 'none' },
+              '& .MuiInputBase-root,.MuiInputBase-root:hover': {
+                height: '100%',
+                backgroundColor: '#00000055',
+                color: 'white',
+                '& > fieldset': {
+                  borderColor: '#E0E3E755 !important',
+                  borderWidth: 1,
+                },
+              },
+            }}
+            style={{ width: '100%' }}
+          />
+          <Tooltip title="Save">
+            <IconButton onClick={(evt) => handleSaveClick(evt, index)}>
+              <images.SaveIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+        :
+        <div>{visibleRows[index].name}</div>
+    )
+  }
+
+  const rowActions = function rowActions(row: TableData, index: number) {
+    return (
+      <Grid container justifyContent={'right'}>
+        <div>
+          <IconButton
+            aria-controls={isEditOpen && anchorIndex === index ? 'edit-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={isEditOpen && anchorIndex === index ? 'true' : undefined}
+            onClick={(evt) => handleEditClick(evt, index)}>
+            <images.UpdateIcon />
+          </IconButton>
+          <Menu
+            id="edit-menu"
+            anchorEl={anchorEditEl}
+            open={isEditOpen && anchorIndex === index}
+            onClose={() => handleEditClick(null)}
+            MenuListProps={{
+              'aria-labelledby': 'basic-button',
+            }}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            <MenuItem onClick={(evt) => handleEditFieldClick(evt, index)}>
+              <images.EditIcon />
+              <div style={{ width: "0.5rem" }} />
+              Edit Field
+            </MenuItem>
+            <div style={{ height: "0.5rem" }} />
+            <MenuItem onClick={(evt) => handleEditDetailsClick(evt, index)}>
+              <images.InfoIcon />
+              <div style={{ width: "0.5rem" }} />
+              Details Edit
+            </MenuItem>
+          </Menu>
+        </div>
+        <div>
+          <IconButton
+            aria-controls={isMoreOpen && anchorIndex === index ? 'basic-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={isMoreOpen && anchorIndex === index ? 'true' : undefined}
+            onClick={(evt) => handleMoreClick(evt, index)}>
+            <images.MoreHorizIcon />
+          </IconButton>
+          <Menu
+            id="basic-menu"
+            anchorEl={anchorMoreEl}
+            open={isMoreOpen && anchorIndex === index}
+            onClose={() => handleMoreClick(null)}
+            MenuListProps={{
+              'aria-labelledby': 'basic-button',
+            }}
+          >
+            <Tooltip title="Delete">
+              <IconButton onClick={(evt) => handleDeleteClick(evt, index)}>
+                <images.DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          </Menu>
+        </div>
+      </Grid>
+    )
+  }
+
+  const tableBody = (
+    <TableBody>
+      {visibleRows
+        ? visibleRows.map((row, index) => {
+          const isItemSelected = isSelected(row.id)
+          const labelId = `enhanced-table-checkbox-${index}`
+
+          return (
+            <TableRow
+              hover
+              onClick={(event) => handleCheckboxClick(event, row.id)}
+              role="checkbox"
+              aria-checked={isItemSelected}
+              tabIndex={-1}
+              key={row.id}
+              selected={isItemSelected}
+              sx={{ cursor: 'pointer' }}
+            >
+              <TableCell padding="checkbox">
+                <Checkbox
+                  color="primary"
+                  checked={isItemSelected}
+                  inputProps={{
+                    'aria-labelledby': labelId,
+                  }}
+                />
+              </TableCell>
+              <TableCell
+                component="th"
+                id={labelId}
+                scope="row"
+              >
+                {rowNameField(row, index)}
+              </TableCell>
+              <TableCell>{row.updateTime.toISOString()}</TableCell>
+              <TableCell>{row.noQuiz}</TableCell>
+              <TableCell>
+                {rowActions(row, index)}
+              </TableCell>
+            </TableRow>
+          )
+        })
+        : null}
+    </TableBody>)
 
   return (
     <Box sx={{ width: '100%' }} display={'flex'} justifyContent={'center'}>
@@ -423,106 +667,30 @@ const ArchiveContainer = (props: AuthProps) => {
               orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
-              rowCount={rows.length}
+              rowCount={tableData.current.length}
             />
-            <TableBody>
-              {visibleRows
-                ? visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.id)
-                  const labelId = `enhanced-table-checkbox-${index}`
-
-                  return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleCheckboxClick(event, row.id)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.id}
-                      selected={isItemSelected}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          color="primary"
-                          checked={isItemSelected}
-                          inputProps={{
-                            'aria-labelledby': labelId,
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                      >
-                        {row.name}
-                      </TableCell>
-                      <TableCell>{row.updateTime.toISOString()}</TableCell>
-                      <TableCell>
-                        <Grid container justifyContent={'right'}>
-                          <Tooltip title="Edit">
-                            <IconButton onClick={(evt) => handleEdit(evt, index)}>
-                              <images.EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <div>
-                            <IconButton
-                              aria-controls={isMoreOpen ? 'basic-menu' : undefined}
-                              aria-haspopup="true"
-                              aria-expanded={isMoreOpen ? 'true' : undefined}
-                              onClick={(evt) => handleMoreClick(evt)}>
-                              <images.MoreHorizIcon />
-                            </IconButton>
-                            <Menu
-                              id="basic-menu"
-                              anchorEl={anchorMoreEl}
-                              open={isMoreOpen}
-                              onClose={() => handleMoreClick(null)}
-                              MenuListProps={{
-                                'aria-labelledby': 'basic-button',
-                              }}
-                            >
-                              <Tooltip title="Delete">
-                                <IconButton onClick={(evt) => handleDelete(evt, index)}>
-                                  <images.DeleteIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </Menu>
-                          </div>
-                        </Grid>
-                        {/* <Grid container justifyContent={'right'}>
-                          <Button variant="outlined">
-                            {t('archive.start')}
-                          </Button>
-                        </Grid> */}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-                : null}
-              {/* {paddingHeight > 0 && (
-                <TableRow
-                  style={{
-                    height: paddingHeight,
-                  }}
-                >
-                  <TableCell colSpan={6} />
-                </TableRow>
-              )} */}
-            </TableBody>
+            {tableBody}
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={DEFAULT_ROWS_PER_PAGE_LIST}
           component="div"
-          count={rows.length}
+          count={tableData.current.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            '.MuiTablePagination-displayedRows': {
+              marginRight: '1rem',
+            },
+            '.MuiTablePagination-actions': {
+              display: 'none',
+            },
+          }}
         />
       </Paper>
+      <LoadingComponent isLoading={isLoading} />
     </Box>
   )
 }

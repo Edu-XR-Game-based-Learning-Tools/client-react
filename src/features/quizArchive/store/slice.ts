@@ -3,16 +3,18 @@ import { createAction, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 import type { RootState } from 'store'
 
-import { initQuizData, initQuizList, QuizData, QuizList } from '../types'
+import { initQuizCollectionDto, initQuizCollectionListDto, QuizCollectionDto, QuizCollectionListDto } from '../types'
 
 export interface QuizArchiveState {
-  quizList: QuizList
-  editQuiz: QuizData 
+  quizCollectionList: QuizCollectionListDto
+  editCollection: QuizCollectionDto
+  addCollection: QuizCollectionDto
 }
 
 const initialState: QuizArchiveState = {
-  quizList: initQuizList,
-  editQuiz: initQuizData
+  quizCollectionList: initQuizCollectionListDto,
+  editCollection: initQuizCollectionDto,
+  addCollection: initQuizCollectionDto
 }
 
 // slice
@@ -20,23 +22,27 @@ export const quizArchiveSlice = createSlice({
   name: 'quizArchive',
   initialState,
   reducers: {
-    setQuizList(state: QuizArchiveState, action: PayloadAction<QuizList>) {
-      state.quizList = action.payload
+    setQuizCollectionList(state: QuizArchiveState, action: PayloadAction<QuizCollectionListDto>) {
+      state.quizCollectionList = action.payload
     },
-    setEditQuiz(state: QuizArchiveState, action: PayloadAction<QuizData>) {
-      state.editQuiz = action.payload
+    setEditCollection(state: QuizArchiveState, action: PayloadAction<QuizCollectionDto>) {
+      state.editCollection = action.payload
+    },
+    setAddCollection(state: QuizArchiveState, action: PayloadAction<QuizCollectionDto>) {
+      state.addCollection = action.payload
     },
   },
 })
 
 // Actions
 export const quizArchiveActions = {
-  getQuizList: createAction(`${quizArchiveSlice.name}/getQuizList`),
-  getQuiz: createAction<number>(`${quizArchiveSlice.name}/getQuiz`),
-  updateQuiz: createAction<QuizData>(`${quizArchiveSlice.name}/updateQuiz`),
-  deleteQuiz: createAction<QuizData>(`${quizArchiveSlice.name}/deleteQuiz`),
-  setQuizList: quizArchiveSlice.actions.setQuizList,
-  setEditQuiz: quizArchiveSlice.actions.setEditQuiz,
+  getQuizCollectionList: createAction(`${quizArchiveSlice.name}/getQuizCollectionList`),
+  getQuizCollection: createAction<number>(`${quizArchiveSlice.name}/getQuizCollection`),
+  updateQuizCollection: createAction<QuizCollectionDto>(`${quizArchiveSlice.name}/updateQuizCollection`),
+  deleteQuizCollection: createAction<QuizCollectionDto>(`${quizArchiveSlice.name}/deleteQuizCollection`),
+  setQuizCollectionList: quizArchiveSlice.actions.setQuizCollectionList,
+  setEditCollection: quizArchiveSlice.actions.setEditCollection,
+  setAddCollection: quizArchiveSlice.actions.setAddCollection,
 }
 
 // Selectors

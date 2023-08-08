@@ -1,10 +1,11 @@
 import { History } from 'history'
 import { useEffect, useState } from 'react'
 import { connect } from 'react-redux'
+import { ToastContainer } from 'react-toastify'
 import { HistoryRouter as Router } from 'redux-first-history/rr6'
 
 import 'App.css'
-import { initUserPreference, AuthType, UserPreference } from 'features/authentication'
+import { AuthType, UserPreference, initUserPreference } from 'features/authentication'
 import { checkToken } from 'libs/core/configureAxios'
 import AppRoutes from 'routes'
 import { ReducerType } from 'store'
@@ -44,7 +45,6 @@ const App = (props: AppProps) => {
     }
   }, [width])
 
-
   useEffect(() => {
     if (authData.accessToken) {
       setIsLoggedIn(Boolean(setIsLoggedIn))
@@ -60,6 +60,17 @@ const App = (props: AppProps) => {
     }}>
       <Router history={history}>
         <AppRoutes isLoggedIn={isLoggedIn} />
+        <ToastContainer
+          position='top-right'
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
       </Router>
     </div>
   )

@@ -13,7 +13,6 @@ import { AuthType } from '../types'
 import LandingPage from './LandingPage'
 import Login from './Login'
 import Register from './Register'
-import './SharedStyles/loginStyles.css'
 
 const mapStateToProps = (state: ReducerType) => ({
   authData: state.authentication.authData,

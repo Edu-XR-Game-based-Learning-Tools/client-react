@@ -4,13 +4,30 @@ import { Env } from 'config/Env'
 import { AUTH_KEY } from 'features/authentication/constants'
 import { AuthType, RefreshTokenActionType } from 'features/authentication/types'
 
+interface JwtDataType {
+  id: string
+  role: string
+}
+
+export const getJwtData = (): JwtDataType | null => {
+  const token = localStorage.getItem(AUTH_KEY)
+  if (!token) return null
+  const authToken: AuthType = JSON.parse(token)
+  if (!(authToken && authToken.accessToken)) return null
+
+  const base64Url = authToken.accessToken.token.split('.')[1]
+  const base64 = base64Url.replace('/-/g', '+').replace('/_/g', '/')
+  const jsonPayload = decodeURIComponent(window.atob(base64).split('').map((ele) =>
+    `%${(`00${ele.charCodeAt(0).toString(16)}`).slice(-2)}`).join(''))
+  return JSON.parse(jsonPayload)
+}
 
 export const logout = () => {
   localStorage.removeItem(AUTH_KEY)
   window.location.reload()
 }
 
-export const checkToken = () => {
+export const checkToken = (isLogoutAfterThat: boolean = true) => {
   const token = localStorage.getItem(AUTH_KEY)
   if (!token) return false
 
@@ -21,7 +38,7 @@ export const checkToken = () => {
   expTime.setSeconds(expTime.getSeconds() + authData.accessToken.expiresIn)
   if (expTime > new Date()) return true
 
-  logout()
+  if (isLogoutAfterThat) logout()
   return false
 }
 
@@ -36,7 +53,7 @@ export const refreshToken = (payload: RefreshTokenActionType): Promise<AuthType>
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 export const tryRefreshToken = async () => {
-  if (checkToken()) return
+  if (checkToken(false)) return
 
   // Call refresh before expire time 2 minutes
   const authData: AuthType = JSON.parse(localStorage.getItem(AUTH_KEY)!)
@@ -64,8 +81,7 @@ function makeApi(baseURL: string) {
       const token = localStorage.getItem(AUTH_KEY)
       if (!token) return config
 
-      if (checkToken())
-        await tryRefreshToken()
+      await tryRefreshToken()
 
       const authToken: AuthType = JSON.parse(token)
       if (authToken && authToken.accessToken) {

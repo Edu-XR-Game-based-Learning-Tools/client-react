@@ -1,47 +1,65 @@
 import { ResponseMessage } from "features/authentication/types"
 
-export interface QuestionData {
-  id: number
+export interface BaseDto extends ResponseMessage {
+  eId: number | null
+  createdAt: Date | null
+  updatedAt: Date | null
+  name: string | null
+}
+
+export interface QuizDto extends BaseDto {
   question: string
+  thumbnail: string | null
+  model: string | null
+  image: string | null
+
   answers: string[]
-  correctAnswer: number | null
+  correctIdx: number
   duration: number
-  imageUrl: string | null
-  modelUrl: string | null
 }
 
-export const initQuestionData: QuestionData = {
-  id: 0,
-  question: 'string',
-  answers: [],
-  correctAnswer: null,
-  duration: 0,
-  imageUrl: null,
-  modelUrl: null
-}
+export const initQuizDto: QuizDto = {
+  eId: null,
+  name: null,
+  question: '',
+  thumbnail: null,
+  model: null,
+  image: null,
 
-export interface QuizData extends ResponseMessage {
-  id: number
-  questions: QuestionData[]
-  name: string
-  thumbNail: string | null
-}
-
-export const initQuizData: QuizData = {
-  id: 0,
-  questions: [],
-  name: '',
-  thumbNail: null,
-  message: '',
+  answers: ['', '', '', ''],
+  correctIdx: 0,
+  duration: 60,
+  createdAt: null,
+  updatedAt: null,
+  message: "",
   success: false
 }
 
-export interface QuizList extends ResponseMessage {
-  quizzes: QuizData[]
+export interface QuizCollectionDto extends BaseDto {
+  description: string | null
+  configuration: string | null
+  quizzes: QuizDto[]
 }
 
-export const initQuizList: QuizList = {
+export const initQuizCollectionDto: QuizCollectionDto = {
+  eId: null,
+  name: '#Collection',
+  description: null,
+  configuration: null,
   quizzes: [],
+
+  message: '',
+  success: false,
+  createdAt: null,
+  updatedAt: null,
+}
+
+export interface QuizCollectionListDto extends ResponseMessage {
+  collections: QuizCollectionDto[]
+}
+
+export const initQuizCollectionListDto: QuizCollectionListDto = {
+  collections: [],
   message: '',
   success: false
 }
