@@ -37,12 +37,13 @@
     "web-vitals": "^3.4.0",
     "yup": "^1.2.0"
   },
+  "overrides": {
+    "typescript": "^5.1.6"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "serve": "serve -s build",
-    "test": "react-scripts test",
-    "test:e2e": "start-server-and-test serve http://localhost:3000 cy:run",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
     "coverage": "react-scripts test --coverage  --watchAll=false",
