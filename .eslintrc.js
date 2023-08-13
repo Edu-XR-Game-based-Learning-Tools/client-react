@@ -16,7 +16,6 @@ module.exports = {
     'plugin:import/typescript',
     'plugin:@typescript-eslint/recommended',
     'plugin:jest/recommended',
-    "plugin:storybook/recommended"
   ],
   settings: {
     react: {

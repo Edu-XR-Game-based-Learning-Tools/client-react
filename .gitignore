@@ -3,9 +3,6 @@
 # project
 TODO.md
 
-# storybook
-/storybook-static
-
 # ide
 *.iml
 /.idea
@@ -15,14 +12,6 @@ TODO.md
 /node_modules
 /.pnp
 .pnp.js
-
-# testing
-/coverage
-/cypress/videos
-/cypress/screenshots
-
-# production
-/build
 
 # misc
 .DS_Store
