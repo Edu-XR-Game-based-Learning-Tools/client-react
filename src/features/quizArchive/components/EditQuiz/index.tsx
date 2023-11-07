@@ -1,9 +1,20 @@
+/* eslint-disable no-alert */
 /* eslint-disable @typescript-eslint/indent */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Box, Button, Drawer, Grid, IconButton, TextField, Tooltip, Typography, styled } from '@mui/material'
+import {
+  Box,
+  Button,
+  Drawer,
+  Grid,
+  IconButton,
+  TextField,
+  Tooltip,
+  Typography,
+  styled,
+} from '@mui/material'
 import { blue, green, orange, red } from '@mui/material/colors'
 import { ActionCreatorWithPayload } from '@reduxjs/toolkit/dist/createAction'
-import { getDownloadURL, uploadBytes } from "firebase/storage"
+import { getDownloadURL, uploadBytes } from 'firebase/storage'
 import * as OV from 'online-3d-viewer'
 import React, { useRef } from 'react'
 import { connect, useSelector } from 'react-redux'
@@ -34,7 +45,7 @@ const mapStateToProps = (state: ReducerType) => ({
 interface EditQuizProps {
   authData: AuthType
   isLoading: boolean
-  setIsLoading: ActionCreatorWithPayload<boolean, "global/setIsLoading">
+  setIsLoading: ActionCreatorWithPayload<boolean, 'global/setIsLoading'>
   editCollection: QuizCollectionDto
 }
 
@@ -59,13 +70,17 @@ const EditQuizContainer = (props: EditQuizProps) => {
   const isFirstLoad = useRef(true)
   const { id } = useParams<{ id: string }>()
   const { isLoading, setIsLoading } = props
-  const editCollectionSelector = useSelector((state: RootState) => state.quizArchive.editCollection);
+  const editCollectionSelector = useSelector((state: RootState) => state.quizArchive.editCollection)
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { getQuizCollection, updateQuizCollection } = useQuizArchiveService()
-  const [collectionData, setCollectionData] = React.useState<QuizCollectionDto>(initQuizCollectionDto)
+  const [collectionData, setCollectionData] =
+    React.useState<QuizCollectionDto>(initQuizCollectionDto)
   const [activeQuizIndex, setActiveQuizIndex] = React.useState<number>(0)
-  const currentQuiz = React.useCallback(() => collectionData.quizzes[activeQuizIndex], [collectionData, activeQuizIndex])
+  const currentQuiz = React.useCallback(
+    () => collectionData.quizzes[activeQuizIndex],
+    [collectionData, activeQuizIndex],
+  )
 
   const btnSize = { height: '2rem', width: '2rem' }
 
@@ -74,8 +89,14 @@ const EditQuizContainer = (props: EditQuizProps) => {
   const [imageFile, setImageFile] = React.useState<File | null>(null)
   const [modelFile, setModelFile] = React.useState<File | null>(null)
   const inputFileRef = useRef() as React.MutableRefObject<HTMLInputElement>
-  const isNotQuizImage = React.useCallback(() => !(imageFile || currentQuiz().image), [currentQuiz, imageFile])
-  const isNotQuizModel = React.useCallback(() => !(modelFile || currentQuiz().model), [currentQuiz, modelFile])
+  const isNotQuizImage = React.useCallback(
+    () => !(imageFile || currentQuiz().image),
+    [currentQuiz, imageFile],
+  )
+  const isNotQuizModel = React.useCallback(
+    () => !(modelFile || currentQuiz().model),
+    [currentQuiz, modelFile],
+  )
 
   // #region First Load Fetch
   React.useEffect(() => {
@@ -88,9 +109,7 @@ const EditQuizContainer = (props: EditQuizProps) => {
     if (Number.isNaN(eid)) {
       alert('Invalid Url Params') // eslint-disable-line no-alert
       navigate('/')
-    }
-    else
-      getQuizCollection(eid)
+    } else getQuizCollection(eid)
   }, [dispatch, getQuizCollection, id, navigate])
 
   React.useEffect(() => {
@@ -102,9 +121,8 @@ const EditQuizContainer = (props: EditQuizProps) => {
     setImageFile(null)
     setModelFile(null)
     setCollectionData(editCollectionSelector)
-    setActiveQuizIndex((prev) => {
-      if (prev > editCollectionSelector.quizzes.length - 1)
-        return 0
+    setActiveQuizIndex(prev => {
+      if (prev > editCollectionSelector.quizzes.length - 1) return 0
       return prev
     })
   }, [editCollectionSelector, navigate])
@@ -117,59 +135,66 @@ const EditQuizContainer = (props: EditQuizProps) => {
 
   // #region Data Manipulation
   const checkIfIsChangeAndNotSave = React.useCallback((): boolean => {
-    if (collectionData !== editCollectionSelector ||
-      JSON.stringify(collectionData.quizzes) !== JSON.stringify(editCollectionSelector.quizzes)) {
+    if (
+      collectionData !== editCollectionSelector ||
+      JSON.stringify(collectionData.quizzes) !== JSON.stringify(editCollectionSelector.quizzes)
+    ) {
       return false
     }
     return true
   }, [collectionData, editCollectionSelector])
 
-  usePrompt(
-    'The changes won\'t be saved, is it ok?',
-    !checkIfIsChangeAndNotSave(),
-  )
+  usePrompt("The changes won't be saved, is it ok?", !checkIfIsChangeAndNotSave())
 
   const checkIfQuizIsChangeAndNotSave = React.useCallback((): boolean => {
-    if (JSON.stringify(collectionData.quizzes[activeQuizIndex]) !== JSON.stringify(editCollectionSelector.quizzes[activeQuizIndex])) {
-      return window.confirm('The changes won\'t be saved, is it ok?') // eslint-disable-line no-alert
+    if (
+      JSON.stringify(collectionData.quizzes[activeQuizIndex]) !==
+      JSON.stringify(editCollectionSelector.quizzes[activeQuizIndex])
+    ) {
+      return window.confirm("The changes won't be saved, is it ok?") // eslint-disable-line no-alert
     }
     return true
   }, [activeQuizIndex, collectionData.quizzes, editCollectionSelector.quizzes])
 
-  const uploadQuizFile = React.useCallback(async (file: File) => {
-    const jwtData = getJwtData()
-    if (!jwtData) {
-      alert('Invalid Token Data') // eslint-disable-line no-alert
-      navigate('/')
-      return null
-    }
-    const storageRef = getQuizStorageRef(`${jwtData.id}/${file.name}`)
-    const response = await uploadBytes(storageRef, file)
-    const url = await getDownloadURL(response.ref)
-    return url
-  }, [navigate])
+  const uploadQuizFile = React.useCallback(
+    async (file: File) => {
+      const jwtData = getJwtData()
+      if (!jwtData) {
+        alert('Invalid Token Data') // eslint-disable-line no-alert
+        navigate('/')
+        return null
+      }
+      const storageRef = getQuizStorageRef(`${jwtData.id}/${file.name}`)
+      const response = await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(response.ref)
+      return url
+    },
+    [navigate],
+  )
 
   const assignFileToQuiz = React.useCallback(async () => {
-    dispatch(setIsLoading(true))
     const promiseFunc = []
-    if (imageFile)
-      promiseFunc.push(uploadQuizFile(imageFile))
-    if (modelFile)
-      promiseFunc.push(uploadQuizFile(modelFile))
+    if (imageFile) promiseFunc.push(uploadQuizFile(imageFile))
+    if (modelFile) promiseFunc.push(uploadQuizFile(modelFile))
 
     const urls = await Promise.all(promiseFunc)
 
-    if (imageFile)
-      [currentQuiz().image] = urls
-    if (modelFile)
-      currentQuiz().model = urls[urls.length - 1]
-    dispatch(setIsLoading(false))
-  }, [currentQuiz, dispatch, imageFile, modelFile, setIsLoading, uploadQuizFile])
+    const quizzes = collectionData.quizzes.map((quiz, idx) =>
+      activeQuizIndex === idx
+        ? {
+            ...quiz,
+            image: imageFile ? urls[0] : quiz.image,
+            model: modelFile ? urls[urls.length - 1] : quiz.model,
+          }
+        : quiz,
+    )
+    const newData = { ...collectionData, quizzes }
+    return newData
+  }, [activeQuizIndex, collectionData, imageFile, modelFile, uploadQuizFile])
 
   const validateForm = React.useCallback((): string => {
-    if (!currentQuiz().question || !currentQuiz().question.trim())
-      return 'Question cannot be empty'
-    if (!currentQuiz().answers || currentQuiz().answers.filter((answer) => answer.trim()).length < 2)
+    if (!currentQuiz().question || !currentQuiz().question.trim()) return 'Question cannot be empty'
+    if (!currentQuiz().answers || currentQuiz().answers.filter(answer => answer.trim()).length < 2)
       return 'At least two non-empty answers should be filled'
     if (!currentQuiz().duration || currentQuiz().duration < 10 || currentQuiz().duration > 240)
       return 'Duration should be between 10 and 240 seconds'
@@ -186,23 +211,20 @@ const EditQuizContainer = (props: EditQuizProps) => {
     }
 
     dispatch(setIsLoading(true))
-    await assignFileToQuiz()
-    updateQuizCollection(collectionData)
+    const newData = await assignFileToQuiz()
+    updateQuizCollection(newData)
     dispatch(setIsLoading(false))
-  }, [validateForm, dispatch, setIsLoading, assignFileToQuiz, updateQuizCollection, collectionData])
+  }, [validateForm, dispatch, setIsLoading, assignFileToQuiz, updateQuizCollection])
 
   const handleDeleteClick = React.useCallback(async () => {
-    if (window.confirm('Are you sure you want to delete this question?')) // eslint-disable-line no-alert
-    {
-      setCollectionData((prev) => {
+    if (window.confirm('Are you sure you want to delete this question?')) {
+      setCollectionData(prev => {
         const isNewQuestion = prev.quizzes[activeQuizIndex].eId === null
-        const quizzes = prev.quizzes.filter((_, idx) =>
-          activeQuizIndex !== idx)
+        const quizzes = prev.quizzes.filter((_, idx) => activeQuizIndex !== idx)
         const newData = { ...prev, quizzes }
         if (!isNewQuestion) updateQuizCollection(newData)
-        setActiveQuizIndex((prev1) => {
-          if (prev1 > quizzes.length - 1)
-            return 0
+        setActiveQuizIndex(prev1 => {
+          if (prev1 > quizzes.length - 1) return 0
           return prev1
         })
         return newData
@@ -213,23 +235,22 @@ const EditQuizContainer = (props: EditQuizProps) => {
   const handleDeleteVisual = React.useCallback(() => {
     const is3D = visualState === '3d'
     if (!is3D) {
-      if (imageFile)
-        setImageFile(null)
+      if (imageFile) setImageFile(null)
       else
-        setCollectionData((prev) => {
+        setCollectionData(prev => {
           const quizzes = prev.quizzes.map((quiz, idx) =>
-            activeQuizIndex === idx ? { ...quiz, image: null } : quiz)
+            activeQuizIndex === idx ? { ...quiz, image: null } : quiz,
+          )
           const newData = { ...prev, quizzes }
           return newData
         })
-    }
-    else if (modelFile) {
+    } else if (modelFile) {
       setModelFile(null)
-    }
-    else {
-      setCollectionData((prev) => {
+    } else {
+      setCollectionData(prev => {
         const quizzes = prev.quizzes.map((quiz, idx) =>
-          activeQuizIndex === idx ? { ...quiz, model: null } : quiz)
+          activeQuizIndex === idx ? { ...quiz, model: null } : quiz,
+        )
         const newData = { ...prev, quizzes }
         return newData
       })
@@ -247,7 +268,7 @@ const EditQuizContainer = (props: EditQuizProps) => {
 
   const handleAddNewClick = React.useCallback(() => {
     if (!checkIfQuizIsChangeAndNotSave()) return
-    setCollectionData((prev) => {
+    setCollectionData(prev => {
       const newData = { ...prev, quizzes: [...prev.quizzes, initQuizDto] }
       return newData
     })
@@ -264,17 +285,26 @@ const EditQuizContainer = (props: EditQuizProps) => {
     </Box>
   )
 
-  const handleSelectQuizClick = React.useCallback((index: number) => {
-    if (!checkIfQuizIsChangeAndNotSave()) return
-    setActiveQuizIndex(index)
-    toggleDrawer(false)
-  }, [checkIfQuizIsChangeAndNotSave, toggleDrawer])
+  const handleSelectQuizClick = React.useCallback(
+    (index: number) => {
+      if (!checkIfQuizIsChangeAndNotSave()) return
+      setActiveQuizIndex(index)
+      toggleDrawer(false)
+    },
+    [checkIfQuizIsChangeAndNotSave, toggleDrawer],
+  )
 
   const drawerItem = (index: number) => {
     const quizData = collectionData.quizzes[index]
     return (
       <Grid key={`drawer-${index}`} container>
-        <Grid item xs={2} display={'flex'} flexDirection={'column'} justifyContent={'space-between'}>
+        <Grid
+          item
+          xs={2}
+          display={'flex'}
+          flexDirection={'column'}
+          justifyContent={'space-between'}
+        >
           <Typography textAlign={'center'}>
             {index + 1}.{quizData.name}
           </Typography>
@@ -286,25 +316,39 @@ const EditQuizContainer = (props: EditQuizProps) => {
           </Tooltip>
         </Grid>
         <Grid item xs={10}>
-          <Button variant="text" onClick={() => handleSelectQuizClick(index)} style={{ width: '100%' }}>
+          <Button
+            variant="text"
+            onClick={() => handleSelectQuizClick(index)}
+            style={{ width: '100%' }}
+          >
             <Grid display={'flex'} flexDirection={'column'} style={{ width: '100%' }}>
-              <img width={'100%'} style={{ aspectRatio: '16/9' }} alt='image-banner' src={quizData.image!} />
+              <img
+                width={'100%'}
+                style={{ aspectRatio: '16/9', objectFit: 'contain' }}
+                alt="image-banner"
+                src={quizData.image!}
+              />
               <Grid container spacing={0.5} marginTop={0}>
                 {quizData.answers.map((_, idx) => (
-                  <Grid key={`drawer-answer-${index}-${idx}`} item xs={6} >
+                  <Grid key={`drawer-answer-${index}-${idx}`} item xs={6}>
                     <Box
                       width={'100%'}
                       padding={0.5}
-                      sx={{ backgroundColor: optionColors[idx], aspectRatio: '4/1' }}>
-                      {
-                        idx === quizData.correctIdx ?
-                          <Box display={'flex'} alignItems={'center'} justifyContent={'center'}
-                            height={'100%'}
-                            sx={{ aspectRatio: '1/1', borderRadius: '50%', backgroundColor: 'white' }}>
-                            <images.CheckIcon />
-                          </Box>
-                          : <></>
-                      }
+                      sx={{ backgroundColor: optionColors[idx], aspectRatio: '4/1' }}
+                    >
+                      {idx === quizData.correctIdx ? (
+                        <Box
+                          display={'flex'}
+                          alignItems={'center'}
+                          justifyContent={'center'}
+                          height={'100%'}
+                          sx={{ aspectRatio: '1/1', borderRadius: '50%', backgroundColor: 'white' }}
+                        >
+                          <images.CheckIcon />
+                        </Box>
+                      ) : (
+                        <></>
+                      )}
                     </Box>
                   </Grid>
                 ))}
@@ -318,21 +362,13 @@ const EditQuizContainer = (props: EditQuizProps) => {
 
   const drawer = () => (
     <React.Fragment key={anchor}>
-      <Drawer
-        anchor={anchor}
-        open={isOpenDrawer}
-        onClose={() => toggleDrawer(false)}
-      >
-        <Box
-          sx={{ width: '25vw' }}
-        >
-          {
-            collectionData.quizzes.length > 0 ?
-              collectionData.quizzes.map((_, index) =>
-                drawerItem(index)
-              )
-              : <></>
-          }
+      <Drawer anchor={anchor} open={isOpenDrawer} onClose={() => toggleDrawer(false)}>
+        <Box sx={{ width: '25vw' }}>
+          {collectionData.quizzes.length > 0 ? (
+            collectionData.quizzes.map((_, index) => drawerItem(index))
+          ) : (
+            <></>
+          )}
           {drawerAddNewQuiz()}
         </Box>
       </Drawer>
@@ -341,16 +377,27 @@ const EditQuizContainer = (props: EditQuizProps) => {
   // #endregion End Drawer
 
   const questionTitle = () => (
-    <Grid container display={'flex'} justifyContent={'space-between'} padding={'0 2rem'} marginBottom={'1rem'}>
+    <Grid
+      container
+      display={'flex'}
+      justifyContent={'space-between'}
+      padding={'0 2rem'}
+      marginBottom={'1rem'}
+    >
       <Box>
-        <Typography display={'inline'} paddingX={'1rem'}>Quiz ID: {currentQuiz().eId ?? '-'}</Typography>
-        <Typography display={'inline'}>Question No: {activeQuizIndex + 1}/{collectionData.quizzes.length}</Typography>
+        <Typography display={'inline'} paddingX={'1rem'}>
+          Quiz ID: {currentQuiz().eId ?? '-'}
+        </Typography>
+        <Typography display={'inline'}>
+          Question No: {activeQuizIndex + 1}/{collectionData.quizzes.length}
+        </Typography>
         <br />
         <IconButton onClick={() => toggleDrawer(true)} style={{ marginLeft: '0.5rem' }}>
-          {
-            !isOpenDrawer ? <images.KeyboardDoubleArrowRightIcon />
-              : <images.KeyboardDoubleArrowLeftIcon />
-          }
+          {!isOpenDrawer ? (
+            <images.KeyboardDoubleArrowRightIcon />
+          ) : (
+            <images.KeyboardDoubleArrowLeftIcon />
+          )}
         </IconButton>
       </Box>
       <Box>
@@ -365,7 +412,7 @@ const EditQuizContainer = (props: EditQuizProps) => {
           </IconButton>
         </Tooltip>
       </Box>
-    </Grid >
+    </Grid>
   )
 
   const questionTimer = () => (
@@ -376,10 +423,13 @@ const EditQuizContainer = (props: EditQuizProps) => {
         type="number"
         required
         value={currentQuiz().duration}
-        onChange={(evt) => {
-          setCollectionData((prev) => {
+        onChange={evt => {
+          setCollectionData(prev => {
             const quizzes = prev.quizzes.map((quiz, idx) =>
-              activeQuizIndex === idx ? { ...quiz, duration: parseInt(evt.target.value, 10) } : quiz)
+              activeQuizIndex === idx
+                ? { ...quiz, duration: parseInt(evt.target.value, 10) }
+                : quiz,
+            )
             const newData = { ...prev, quizzes }
             return newData
           })
@@ -393,20 +443,21 @@ const EditQuizContainer = (props: EditQuizProps) => {
 
   const question = () => (
     <Grid container spacing={0.5} marginTop={0} direction={'column'}>
-      <Grid item xs={8} >
+      <Grid item xs={8}>
         <TextField
-          type='text'
+          type="text"
           required
           value={currentQuiz().question}
-          onChange={(evt) => {
-            setCollectionData((prev) => {
+          onChange={evt => {
+            setCollectionData(prev => {
               const quizzes = prev.quizzes.map((quiz, idx) =>
-                activeQuizIndex === idx ? { ...quiz, question: evt.target.value } : quiz)
+                activeQuizIndex === idx ? { ...quiz, question: evt.target.value } : quiz,
+              )
               const newData = { ...prev, quizzes }
               return newData
             })
           }}
-          variant='outlined'
+          variant="outlined"
           multiline
           maxRows={12}
           sx={{
@@ -431,84 +482,143 @@ const EditQuizContainer = (props: EditQuizProps) => {
     const is3D = visualState === '3d'
 
     const button3d = (
-      <IconButton style={{ backgroundColor: is3D ? blue[300] : 'white' }}
-        disabled={is3D} onClick={() => { setVisualState('3d') }}>
+      <IconButton
+        style={{ backgroundColor: is3D ? blue[300] : 'white' }}
+        disabled={is3D}
+        onClick={() => {
+          setVisualState('3d')
+        }}
+      >
         <images.ViewInAr style={{ ...btnSize }} />
-      </IconButton>)
+      </IconButton>
+    )
     const button2d = (
-      <IconButton style={{ backgroundColor: !is3D ? blue[300] : 'white' }}
-        disabled={!is3D} onClick={() => { setVisualState('2d') }}>
+      <IconButton
+        style={{ backgroundColor: !is3D ? blue[300] : 'white' }}
+        disabled={!is3D}
+        onClick={() => {
+          setVisualState('2d')
+        }}
+      >
         <images.Image style={{ ...btnSize }} />
-      </IconButton>)
+      </IconButton>
+    )
 
-    const activeFileTypeString = () => is3D ? 'model' : 'image'
+    const activeFileTypeString = () => (is3D ? 'model' : 'image')
     const isAdd = !is3D ? isNotQuizImage() : isNotQuizModel()
 
     const addOrUpdateButton = (
       <Tooltip title={isAdd ? `Add ${activeFileTypeString()}` : `Update ${activeFileTypeString()}`}>
-        <IconButton style={{ backgroundColor: 'white' }} onClick={() => inputFileRef.current.click()}>
-          {isAdd
-            ? <images.AddIcon style={{ ...btnSize }} />
-            : <images.EditIcon style={{ ...btnSize }} />}
+        <IconButton
+          style={{ backgroundColor: 'white' }}
+          onClick={() => inputFileRef.current.click()}
+        >
+          {isAdd ? (
+            <images.AddIcon style={{ ...btnSize }} />
+          ) : (
+            <images.EditIcon style={{ ...btnSize }} />
+          )}
         </IconButton>
-      </Tooltip>)
-
-    const modelView = () => (isNotQuizModel() ?
-      <Box style={{ ...btnSize, alignSelf: 'center', display: !is3D ? 'none' : 'block' }}>{addOrUpdateButton}</Box> :
-      <Box style={{
-        width: '100%', height: '100%', border: '2px solid', position: 'absolute', display: !is3D ? 'none' : 'block'
-      }}>
-        <Basic3DViewer file={modelFile} url={currentQuiz().model} />
-      </Box>
+      </Tooltip>
     )
-    const imageView = () => (isNotQuizImage() ?
-      <Box style={{ ...btnSize, alignSelf: 'center' }}>{addOrUpdateButton}</Box> :
-      <img style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} src={!imageFile ? currentQuiz().image! : URL.createObjectURL(imageFile)} />)
+
+    const modelView = () =>
+      isNotQuizModel() ? (
+        <Box style={{ ...btnSize, alignSelf: 'center', display: !is3D ? 'none' : 'block' }}>
+          {addOrUpdateButton}
+        </Box>
+      ) : (
+        <Box
+          style={{
+            width: '100%',
+            height: '100%',
+            border: '2px solid',
+            position: 'absolute',
+            display: !is3D ? 'none' : 'block',
+          }}
+        >
+          <Basic3DViewer file={modelFile} url={currentQuiz().model} />
+        </Box>
+      )
+    const imageView = () =>
+      isNotQuizImage() ? (
+        <Box style={{ ...btnSize, alignSelf: 'center' }}>{addOrUpdateButton}</Box>
+      ) : (
+        <img
+          style={{ height: '100%', width: '100%', objectFit: 'contain' }}
+          src={!imageFile ? currentQuiz().image! : URL.createObjectURL(imageFile)}
+        />
+      )
 
     return (
-      <Grid container spacing={0.5} marginTop={0} marginRight={'5rem'} direction={'column'} flexGrow={1}>
-        <Box height={'95%'} position={'relative'} display={'flex'} alignItems={'start'} justifyContent={isAdd ? 'center' : 'right'} paddingRight={'1rem'} >
+      <Grid
+        container
+        spacing={0.5}
+        marginTop={0}
+        marginRight={'5rem'}
+        direction={'column'}
+        flexGrow={1}
+        maxHeight={'60vh'}
+      >
+        <Box
+          height={'95%'}
+          position={'relative'}
+          display={'flex'}
+          alignItems={'start'}
+          justifyContent={isAdd ? 'center' : 'right'}
+          paddingRight={'1rem'}
+          maxHeight={'100%'}
+        >
           {modelView()}
           {!is3D ? imageView() : <></>}
-          <Box position={'absolute'} left={'100%'} display={'flex'} flexDirection={'column'} gap={1}>
-            {!is3D ? <Tooltip title="3D Model">
-              {button3d}
-            </Tooltip> : button3d}
-            {is3D ? <Tooltip title="Image">
-              {button2d}
-            </Tooltip> : button2d}
+          <Box
+            position={'absolute'}
+            left={'100%'}
+            display={'flex'}
+            flexDirection={'column'}
+            gap={1}
+          >
+            {!is3D ? <Tooltip title="3D Model">{button3d}</Tooltip> : button3d}
+            {is3D ? <Tooltip title="Image">{button2d}</Tooltip> : button2d}
             {addOrUpdateButton}
-            {
-              is3D && !isNotQuizModel() || !is3D && !isNotQuizImage() ?
-                <Tooltip title={`Remove ${activeFileTypeString()}`}>
-                  <IconButton style={{ backgroundColor: 'white' }} onClick={() => handleDeleteVisual()}>
-                    <images.DeleteIcon style={{ ...btnSize }} />
-                  </IconButton>
-                </Tooltip>
-                : <></>
-            }
+            {(is3D && !isNotQuizModel()) || (!is3D && !isNotQuizImage()) ? (
+              <Tooltip title={`Remove ${activeFileTypeString()}`}>
+                <IconButton
+                  style={{ backgroundColor: 'white' }}
+                  onClick={() => handleDeleteVisual()}
+                >
+                  <images.DeleteIcon style={{ ...btnSize }} />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <></>
+            )}
           </Box>
         </Box>
         <input
           ref={inputFileRef}
-          onClick={(evt) => {
+          onClick={evt => {
             evt.currentTarget.value = '' // Reset selected file
           }}
-          onChange={(evt) => {
+          onChange={evt => {
             if (evt.target.files?.length === 0 ?? false) return
 
             if (!is3D) setImageFile(evt.target.files![0])
             else setModelFile(evt.target.files![0])
             // inputFileRef.current.files = null
-          }} type="file" hidden accept={!is3D ? 'image/*' : '.gltf, .fbx, .obj'} />
-      </Grid >
+          }}
+          type="file"
+          hidden
+          accept={!is3D ? 'image/*' : '.gltf, .fbx, .obj'}
+        />
+      </Grid>
     )
   }
 
   const options = () => (
     <Grid container rowSpacing={1} columnSpacing={3} marginRight={'5rem'}>
       {currentQuiz().answers.map((_, index) => (
-        <Grid key={`answer-${index}`} item xs={6} >
+        <Grid key={`answer-${index}`} item xs={6}>
           <Box
             padding={2}
             gap={2}
@@ -518,44 +628,58 @@ const EditQuizContainer = (props: EditQuizProps) => {
               width: '100%',
               display: 'flex',
               alignItems: 'center',
-            }}>
-            {
-              currentQuiz().correctIdx === index ?
-                <Box display={'flex'} alignItems={'center'} justifyContent={'center'}
-                  height={'100%'}
-                  sx={{ aspectRatio: '1/1', borderRadius: '50%', backgroundColor: 'white' }}>
-                  <images.CheckIcon />
-                </Box>
-                :
-                <Box display={'flex'} alignItems={'center'} justifyContent={'center'}
-                  height={'100%'}
-                  sx={{ aspectRatio: '1/1', borderRadius: '50%', backgroundColor: 'white', cursor: 'pointer' }}
-                  onClick={() => {
-                    setCollectionData((prev) => {
-                      const quizzes = prev.quizzes.map((quiz, idx) =>
-                        activeQuizIndex === idx ? { ...quiz, correctIdx: index } : quiz)
-                      const newData = { ...prev, quizzes }
-                      return newData
-                    })
-                  }}
-                >
-                </Box>
-            }
+            }}
+          >
+            {currentQuiz().correctIdx === index ? (
+              <Box
+                display={'flex'}
+                alignItems={'center'}
+                justifyContent={'center'}
+                height={'100%'}
+                sx={{ aspectRatio: '1/1', borderRadius: '50%', backgroundColor: 'white' }}
+              >
+                <images.CheckIcon />
+              </Box>
+            ) : (
+              <Box
+                display={'flex'}
+                alignItems={'center'}
+                justifyContent={'center'}
+                height={'100%'}
+                sx={{
+                  aspectRatio: '1/1',
+                  borderRadius: '50%',
+                  backgroundColor: 'white',
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  setCollectionData(prev => {
+                    const quizzes = prev.quizzes.map((quiz, idx) =>
+                      activeQuizIndex === idx ? { ...quiz, correctIdx: index } : quiz,
+                    )
+                    const newData = { ...prev, quizzes }
+                    return newData
+                  })
+                }}
+              ></Box>
+            )}
             <TextField
-              type='text'
+              type="text"
               required
               value={currentQuiz().answers[index]}
-              onChange={(evt) => {
-                setCollectionData((prev) => {
+              onChange={evt => {
+                setCollectionData(prev => {
                   const answers = prev.quizzes[activeQuizIndex].answers.map((ans, idx) =>
-                    index === idx ? evt.target.value : ans)
+                    index === idx ? evt.target.value : ans,
+                  )
                   const quizzes = prev.quizzes.map((quiz, idx) =>
-                    activeQuizIndex === idx ? { ...quiz, answers } : quiz)
+                    activeQuizIndex === idx ? { ...quiz, answers } : quiz,
+                  )
                   const newData = { ...prev, quizzes }
                   return newData
                 })
               }}
-              variant='outlined'
+              variant="outlined"
               multiline
               maxRows={4}
               sx={{
@@ -577,13 +701,26 @@ const EditQuizContainer = (props: EditQuizProps) => {
     </Grid>
   )
 
-  const content = () => (
-    collectionData.quizzes.length === 0 ?
+  const content = () =>
+    collectionData.quizzes.length === 0 ? (
       drawerAddNewQuiz()
-      :
-      <Box position={'relative'} minHeight={'calc(100vh - 7rem)'} display={'flex'} flexDirection={'column'}>
+    ) : (
+      <Box
+        position={'relative'}
+        height={'calc(100vh - 7rem)'}
+        minHeight={'calc(100vh - 7rem)'}
+        display={'flex'}
+        flexDirection={'column'}
+      >
         {questionTitle()}
-        <Box sx={{ display: 'flex', minHeight: '100%', flexDirection: 'column', paddingLeft: '5rem', flexGrow: 1 }} >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            paddingLeft: '5rem',
+            flexGrow: 1,
+          }}
+        >
           <Grid container item xs={12} spacing={5} sx={{ flexGrow: '1 !important' }}>
             <Grid container item xs={5}>
               {question()}
@@ -592,19 +729,21 @@ const EditQuizContainer = (props: EditQuizProps) => {
               {visual()}
             </Grid>
           </Grid>
-          <Grid container item >
+          <Grid container item>
             {options()}
           </Grid>
         </Box>
         {questionTimer()}
         {drawer()}
       </Box>
-  )
+    )
 
-  return <div>
-    {content()}
-    <LoadingComponent isLoading={isLoading} />
-  </div>
+  return (
+    <div>
+      {content()}
+      <LoadingComponent isLoading={isLoading} />
+    </div>
+  )
 }
 
 export default connect(mapStateToProps)(EditQuizContainer)
