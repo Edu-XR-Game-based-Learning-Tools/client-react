@@ -23,3 +23,8 @@ TODO.md
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+/*
+!.gitignore
+!build-server/
+!build/
