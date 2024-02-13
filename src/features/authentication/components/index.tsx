@@ -1,4 +1,5 @@
-import { Backdrop, CircularProgress, Grid, Typography } from '@mui/material'
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload'
+import { Backdrop, CircularProgress, Grid, IconButton, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { connect } from 'react-redux'
@@ -6,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 
 import images from 'config/images'
 import { checkToken } from 'libs/core/configureAxios'
+import { onDownloadXRApp } from 'libs/core/firebase'
 import { ReducerType } from 'store'
 
 import { AuthType } from '../types'
@@ -50,57 +52,81 @@ const AuthenticationContainer = (props: AuthProps) => {
   }, [navigate, isLoggedIn])
 
   return (
-    <Grid container style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(107.56deg, #222629 12.02%, #1E453E 62.02%)',
-    }}>
-      <Grid container item xs={6} style={{ padding: '5rem 0 0 8rem', }}>
-        <Grid container style={{ height: 'fit-content', }}>
+    <Grid
+      container
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(107.56deg, #222629 12.02%, #1E453E 62.02%)',
+      }}
+    >
+      <Grid container item xs={6} style={{ padding: '5rem 0 0 8rem' }}>
+        <Grid container style={{ height: 'fit-content' }}>
           <img src={images.AppIcon} alt={images.AppIcon} />
-          <Typography style={{
-            fontSize: '5rem',
-            fontFamily: 'Poppins',
-            background: '-webkit-linear-gradient(180deg, #FCE38A 0%, #CC2A2A 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            marginLeft: '2rem',
-          }}>{t('company.title')}</Typography>
-        </Grid>
-        <Grid item xs={12}>
-          <Typography style={{
-            fontSize: '4rem',
-            fontWeight: 'bold',
-            background: '-webkit-linear-gradient(180deg, #B3B990 100%, #86C232 47%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontFamily: 'Poppins',
-          }}>
-            Join the
-            <span style={{
-              fontSize: '6rem',
-              background: '-webkit-linear-gradient(180deg, #86C232 100%, #86C232 100%)',
-              WebkitBackgroundClip: 'text',
-              fontWeight: 'bold',
-              WebkitTextFillColor: 'transparent',
+          <Typography
+            style={{
+              fontSize: '5rem',
               fontFamily: 'Poppins',
-            }}> fun.</span>
+              background: '-webkit-linear-gradient(180deg, #FCE38A 0%, #CC2A2A 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginLeft: '2rem',
+            }}
+          >
+            {t('company.title')}
           </Typography>
         </Grid>
-        <img src={images.GameIcon} alt={images.GameIcon} style={{
-          objectFit: 'cover',
-          opacity: 0.7,
-          transform: 'rotate(30deg)',
-          margin: '0 0 20% 0'
-        }} />
+        <Grid item xs={12}>
+          <Typography
+            style={{
+              fontSize: '4rem',
+              fontWeight: 'bold',
+              background: '-webkit-linear-gradient(180deg, #B3B990 100%, #86C232 47%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontFamily: 'Poppins',
+            }}
+          >
+            Join the
+            <span
+              style={{
+                fontSize: '6rem',
+                background: '-webkit-linear-gradient(180deg, #86C232 100%, #86C232 100%)',
+                WebkitBackgroundClip: 'text',
+                fontWeight: 'bold',
+                WebkitTextFillColor: 'transparent',
+                fontFamily: 'Poppins',
+              }}
+            >
+              {' '}
+              fun.
+            </span>
+            <IconButton size="large" aria-label="Download Game" onClick={onDownloadXRApp}>
+              <CloudDownloadIcon style={{ color: '#86C232' }} fontSize="large" />
+            </IconButton>
+          </Typography>
+        </Grid>
+        <img
+          src={images.GameIcon}
+          alt={images.GameIcon}
+          style={{
+            objectFit: 'cover',
+            opacity: 0.7,
+            transform: 'rotate(30deg)',
+            margin: '0 0 20% 0',
+          }}
+        />
       </Grid>
       <Grid container item xs={6} alignItems="center" justifyContent="center">
         {isLoginPage ? <Login setLogin={setLogin} /> : <Register setLogin={setLogin} />}
       </Grid>
       <LandingPage />
-      <Backdrop style={{
-        zIndex: 1,
-        color: '#fff',
-      }} open={isLoading}>
+      <Backdrop
+        style={{
+          zIndex: 1,
+          color: '#fff',
+        }}
+        open={isLoading}
+      >
         <CircularProgress style={{ color: '#E9781C' }} />
       </Backdrop>
     </Grid>
